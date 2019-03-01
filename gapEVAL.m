@@ -177,8 +177,8 @@ try
         
     %%  POWER ANALYSIS        
         
-        cont_hrs = 21;
-        rest_hrs = [14:20,24:31];
+        cont_hrs = 19;
+        rest_hrs = [14:18,20:21,24:31];
         fpr = fpr4c(tablename_fit, cont.name, cont_hrs, 8);
         
         data = [];
@@ -344,18 +344,19 @@ try
                   'MarkerFaceColor',[0 .7 .7],...
                   'LineWidth',2);
         hold on
-        title(sprintf('ES V/S Power\nTime = %dhrs | FPR = %.2f%%',cont_hrs, fpr))
+        title(sprintf('ES V/S Power\nTime = %dhrs | FPR = %.2f%% | Missing %d',cont_hrs,fpr,ss(iii)))
         hold off
         saveas(fig,sprintf('powes_%d_%d.png',cont_hrs,ss(iii)))
         
         fprintf('Power analysis done for %d missing references.\n',ss(iii))
-
+        send_message(4124992194,'fi','gapEVAL',...
+            sprintf('Power analysis done for %d missing references.',ss(iii)))
     end
 
     send_message(4124992194,'fi','gapEVAL','Task Complete!')
 catch me
     warning(me.message)
-    send_message(4124992194,'fi','Error: gapEVAL','me.message)
+    send_message(4124992194,'fi','Error: gapEVAL',me.message)
 
 end
 
