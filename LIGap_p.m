@@ -13,10 +13,28 @@
 %%
 
     function [data_fit, pos_miss] = LIGap_p(hours,n_plates,p2c_info,cont_name,...
-        tablename_p2o,tablename_jpeg,pos_border,ss,IL)
+        tablename_p2o,tablename_jpeg,pos_border,ss,IL,up)
     
         connectSQL;
         ss = ss/2;
+        
+        pos_reps = [110000,120000,130000,140000,...
+            210000,220000,230000,240000];
+        
+        cont96 = fetch(conn, ['select pos from PT2_pos2orf_name ',...
+            'where orf_name = ''BF_control'' ',...
+            'and pos < 10000 ',...
+            'and pos not in ',...
+            '(select * from PT2_borderpos)']);
+        all6144 = fetch(conn, ['select a.pos ',...
+            'from PT2_pos2orf_name a, PT2_pos2coor6144 b ',...
+            'where a.pos = b.pos and 6144plate = 1 ',...
+            'order by 6144plate, 6144col, 6144row']);
+        cont6144 = fetch(conn, ['select a.pos ',...
+            'from PT2_pos2orf_name a, PT2_pos2coor6144 b ',...
+            'where a.pos = b.pos and 6144plate = 1 ',...
+            'and a.orf_name = ''BF_control'' ',...
+            'order by 6144plate, 6144col, 6144row']);
         
         for ii = 1:length(hours)
             temp = [];
@@ -58,15 +76,27 @@
 
         %%  INTRODUCE GAPS
         
-                if iii == 1
-                    [pos_miss, p] = datasample(pos.cont.pos(~ismember(pos.cont.pos, pos_border.pos)),...
-                        ss,'Replace',false);
+                if up == 0
+                    if iii == 1
+                        [pos_miss, p] = datasample(pos.cont.pos(~ismember(pos.cont.pos, pos_border.pos)),...
+                            ss,'Replace',false);
+                    else
+                        pos_miss = pos.cont.pos(p);
+                    end
+                    pos_cont = pos.cont.pos(~ismember(pos.cont.pos,pos_miss));
+                    cont_pos = col2grid(ismember(pos.all.pos, pos_cont));
                 else
-                    pos_miss = pos.cont.pos(p);
+                    [temp, p] = datasample(cont96.pos, ss/4, 'Replace', false);
+                    
+                    if iii == 1
+                        pos_miss = pos_reps + temp;
+                    else
+                        pos_miss = pos_reps + cont96.pos(p);
+                    end
+                    pos_cont = cont6144.pos(~ismember(cont6144.pos, pos_miss));
+                    cont_pos = col2grid(ismember(all6144.pos, pos_cont));
                 end
-                pos_cont = pos.cont.pos(~ismember(pos.cont.pos,pos_miss));
-                
-                cont_pos = col2grid(ismember(pos.all.pos, pos_cont));
+
                 cont_avg = col2grid(avg_data.average).*cont_pos;
 
         %%  CALCULATE BACKGROUND
