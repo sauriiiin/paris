@@ -88,8 +88,8 @@
                     cont_pos = col2grid(ismember(pos.all.pos, pos_cont));
                 else          
                     if iii == 1
-                        [temp, p] = datasample(cont96.pos, ss/4, 'Replace', false);
-                        pos_miss = pos_reps + temp;
+                        [tmp, p] = datasample(cont96.pos, ss/4, 'Replace', false);
+                        pos_miss = pos_reps + tmp;
                     else
                         pos_miss = pos_reps + cont96.pos(p);
                     end

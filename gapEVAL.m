@@ -19,9 +19,9 @@
 
         connectSQL;
 
-        ss = [500];
+        ss = 480;
         IL = 1; % interleave = yes
-        up = 0; % upscale pattern missing = no
+        up = 1; % upscale pattern missing = no
 
         expt_name = '4C2_GAP';
         density = 6144;
@@ -94,7 +94,11 @@
                 'where a.pos = b.pos ',...
                 'order by a.pos asc)'],tablename_fit,tablename_norm,tablename_p2o));
 
-            pos_miss = sprintf('%d,',[pos_miss;pos_miss + 100000]);
+            if up == 0
+                pos_miss = sprintf('%d,',[pos_miss;pos_miss + 100000]);
+            else
+                pos_miss = sprintf('%d,',pos_miss);
+            end
 
             exec(conn, sprintf(['update %s ',...
                 'set fitness = NULL ',...
