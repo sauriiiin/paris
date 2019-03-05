@@ -19,7 +19,7 @@
 
         connectSQL;
 
-        ss = 480;
+        ss = 0;
         IL = 1; % interleave = yes
         up = 1; % upscale pattern missing = no
 
