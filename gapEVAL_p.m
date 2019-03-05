@@ -21,7 +21,7 @@
 
         ss = 0;
         IL = 1; % interleave = yes
-        up = 1; % upscale pattern missing = no
+        up = 1; % upscale pattern missing = yes
 
         expt_name = '4C2_GAP';
         density = 6144;
