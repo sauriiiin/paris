@@ -362,7 +362,9 @@
         end
 
         send_message(4124992194,'fi','gapEVAL','Task Complete!')
+        
     catch me
+        
         warning(me.message)
         send_message(4124992194,'fi','Error: gapEVAL',me.message)
 
