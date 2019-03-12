@@ -20,8 +20,8 @@
         connectSQL;
 
         ss = 0;
-        IL = 1; % interleave = yes
-        up = 1; % upscale pattern missing = yes
+        IL = 1; % 0,1 : no, yes
+        up = 2; % 0,1,2 : random gaps, upscale pattern gaps, random 96 source gaps
 
         expt_name = '4C2_GAP';
         density = 6144;

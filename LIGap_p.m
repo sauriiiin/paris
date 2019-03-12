@@ -22,8 +22,9 @@
         
         cont384 = 384*3+1:384*4;
         [nine61,nine62,nine63,nine64] = downscale(col2grid(cont384));
-        nine9 = {nine61,nine62,nine63,nine64};
-        tmp96 = nine9{randi(4)};
+        nine6 = {nine61,nine62,nine63,nine64};
+%         tmp96 = nine6{randi(4)};
+        tmp96 = nine6{2};
         
         pos_reps = [110000,120000,130000,140000,...
             210000,220000,230000,240000];
