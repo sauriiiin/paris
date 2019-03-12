@@ -7,7 +7,9 @@
 
 %   Linear Interpolation to predict plate background while introducing gaps
 %   in the reference grid.
-
+%
+%   up : 0,1,2 : random gaps, upscale pattern gaps, random 96 source gaps
+%
 %   Part of LIEval.
 
 %%
@@ -18,14 +20,13 @@
         connectSQL;
         ss = ss/2;
         
+        cont384 = 384*3+1:384*4;
+        [nine61,nine62,nine63,nine64] = downscale(col2grid(cont384));
+        nine9 = {nine61,nine62,nine63,nine64};
+        tmp96 = nine9{randi(4)};
+        
         pos_reps = [110000,120000,130000,140000,...
             210000,220000,230000,240000];
-        
-        cont96 = fetch(conn, ['select pos from PT2_pos2orf_name ',...
-            'where orf_name = ''BF_control'' ',...
-            'and pos < 10000 ',...
-            'and pos not in ',...
-            '(select * from PT2_borderpos)']);
         
         for ii = 1:length(hours)
             temp = [];
@@ -86,13 +87,17 @@
                     end
                     pos_cont = pos.cont.pos(~ismember(pos.cont.pos,pos_miss));
                     cont_pos = col2grid(ismember(pos.all.pos, pos_cont));
-                else          
+                elseif up == 1          
                     if iii == 1
-                        [tmp, p] = datasample(cont96.pos, ss/4, 'Replace', false);
+                        [tmp, p] = datasample(cont384, ss/4, 'Replace', false);
                         pos_miss = pos_reps + tmp;
                     else
-                        pos_miss = pos_reps + cont96.pos(p);
+                        pos_miss = pos_reps + cont384(p);
                     end
+                    pos_cont = cont6144.pos(~ismember(cont6144.pos, pos_miss));
+                    cont_pos = col2grid(ismember(all6144.pos, pos_cont));
+                else
+                    pos_miss = pos_reps + tmp96;
                     pos_cont = cont6144.pos(~ismember(cont6144.pos, pos_miss));
                     cont_pos = col2grid(ismember(all6144.pos, pos_cont));
                 end
