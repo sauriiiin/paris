@@ -71,7 +71,7 @@
     for ss=1:8
         
         fprintf('sample size = %d\n',ss)
-        cont_hrs = 14;
+        cont_hrs = 11;
         rest_hrs = hours(hours~=cont_hrs);
         fpr = fpr4c(tablename_fit, cont.name, cont_hrs, ss);
         
