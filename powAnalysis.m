@@ -71,7 +71,7 @@ try
      
     for t = 2:length(hours)
         cont_hrs = hours(t);
-        rest_hrs = hours(hours~=cont_hrs);
+        rest_hrs = hours;%hours(hours~=cont_hrs);
         fprintf("Analysis for Control Hour = %0.1f Started.\n",cont_hrs);
 
         for ss=8
@@ -242,7 +242,7 @@ try
             hold on
             title(sprintf('ES V/S Power\nTime = %dhrs | SS = %d | FPR = %.2f%%',cont_hrs, ss, fpr))
             hold off
-            saveas(fig,sprintf('powES_%d_%d.png',cont_hrs,ss))
+            saveas(fig,sprintf('%s_powES_%d_%d.png',expt_name,cont_hrs,ss))
         end
         
         fprintf("Analysis for Control Hours = %0.1f Complete.\n",cont_hrs)
