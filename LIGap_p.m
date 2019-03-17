@@ -98,7 +98,7 @@
                     pos_cont = cont6144.pos(~ismember(cont6144.pos, pos_miss));
                     cont_pos = col2grid(ismember(all6144.pos, pos_cont));
                 else
-                    pos_miss = pos_reps + tmp96;
+                    pos_miss = pos_reps + grid2row(tmp96)';
                     pos_cont = cont6144.pos(~ismember(cont6144.pos, pos_miss));
                     cont_pos = col2grid(ismember(all6144.pos, pos_cont));
                 end

@@ -168,17 +168,17 @@
                     fpdat = [fpdat; [p(i), fp/len]];
                 end
 
-                fig = figure('Renderer', 'painters', 'Position', [10 10 960 600],'visible','off');
-                histogram(pvals, 'Normalization', 'cdf')
-                hold on
-                plot(0:0.01:1,0:0.01:1,'--r','LineWidth',3)
-                grid on
-                xlabel('P Value Cut-offs')
-                ylabel('Proportion of Colonies')
-                title(sprintf('Time = %d hrs | Missing %d References',hours(ii),ss(iii)))
-                xlim([0,1])
-                ylim([0,1])
-                saveas(fig,sprintf('fpr_%d_%d.png',ss(iii),hours(ii)))
+%                 fig = figure('Renderer', 'painters', 'Position', [10 10 960 600],'visible','off');
+%                 histogram(pvals, 'Normalization', 'cdf')
+%                 hold on
+%                 plot(0:0.01:1,0:0.01:1,'--r','LineWidth',3)
+%                 grid on
+%                 xlabel('P Value Cut-offs')
+%                 ylabel('Proportion of Colonies')
+%                 title(sprintf('Time = %d hrs | Missing %d References',hours(ii),ss(iii)))
+%                 xlim([0,1])
+%                 ylim([0,1])
+%                 saveas(fig,sprintf('fpr_%d_%d.png',ss(iii),hours(ii)))
             end
 
             fprintf('FPR analysis for %d missing references complete.\n',ss(iii))
@@ -357,11 +357,11 @@
             saveas(fig,sprintf('powes_%d_%d.png',cont_hrs,ss(iii)))
 
             fprintf('Power analysis done for %d missing references.\n',ss(iii))
-            send_message(4124992194,'fi','gapEVAL',...
+            send_message(4124992194,'fi','Update: gapEVAL',...
                 sprintf('Power analysis done for %d missing references.',ss(iii)))
         end
 
-        send_message(4124992194,'fi','gapEVAL','Task Complete!')
+        send_message(4124992194,'fi','Update: gapEVAL','Task Complete!')
         
     catch me
         

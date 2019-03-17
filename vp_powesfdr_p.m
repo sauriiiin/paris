@@ -4,16 +4,16 @@
 
     %%  Load Paths to Files and Data
 
-%     col_analyzer_path = '/Users/saur1n/Documents/GitHub/Matlab-Colony-Analyzer-Toolkit';
-%     bean_toolkit_path = '/Users/saur1n/Documents/GitHub/bean-matlab-toolkit';
-%     sau_toolkit_path = '/Users/saur1n/Documents/GitHub/sau-matlab-toolkit';
-%     addpath(genpath(col_analyzer_path));
-%     addpath(genpath(bean_toolkit_path));aris
-%     addpath(genpath(sau_toolkit_path));
-    javaaddpath(uigetfile());
+    cd /home/sbp29/MATLAB
 
-%%  Add MCA toolkit to Path
-%     add_mca_toolkit_to_path
+    addpath('/home/sbp29/MATLAB/Matlab-Colony-Analyzer-Toolkit')
+    addpath('/home/sbp29/MATLAB/bean-matlab-toolkit')
+    addpath('/home/sbp29/MATLAB/sau-matlab-toolkit')
+    addpath('/home/sbp29/MATLAB/sau-matlab-toolkit/grid-manipulation')
+    addpath('/home/sbp29/MATLAB/paris')
+    addpath('/home/sbp29/MATLAB/development')
+
+    javaaddpath('/home/sbp29/MATLAB/mysql-connector-java-8.0.12.jar');
 
 %%  Initialization
 
@@ -22,7 +22,7 @@
     setdbprefs({'NullStringRead';'NullStringWrite';'NullNumberRead';'NullNumberWrite'},...
                   {'null';'null';'NaN';'NaN'})
 
-    expt_name = '4C2_R2';
+    expt_name = '4C3_GA';
     density = 6144;
     
 %   MySQL Table Details  
@@ -35,8 +35,8 @@
     tablename_pval      = sprintf('%s_%d_PVALUE',expt_name,density);
     tablename_res       = sprintf('%s_%d_RES',expt_name,density);
     
-    tablename_p2o       = 'VP_pos2orf_name1';
-    tablename_bpos      = 'VP_borderpos';
+    tablename_p2o       = '4C3_pos2orf_name';
+    tablename_bpos      = '4C3_borderpos';
     
 %   Reference Strain Name
 
@@ -46,10 +46,10 @@
 
     connectSQL;
     
-    p2c_info(1,:) = 'VP_pos2coor6144';
-    p2c_info(2,:) = '6144plate      ';
-    p2c_info(3,:) = '6144col        ';
-    p2c_info(4,:) = '6144row        ';
+    p2c_info(1,:) = '4C3_pos2coor6144';
+    p2c_info(2,:) = '6144plate       ';
+    p2c_info(3,:) = '6144col         ';
+    p2c_info(4,:) = '6144row         ';
 
     p2c = fetch(conn, sprintf(['select * from %s a ',...
         'order by a.%s, a.%s, a.%s'],...
@@ -64,15 +64,15 @@
         p2c_info(1,:),...
         p2c_info(2,:)));
     
-%     hours = fetch(conn, sprintf(['select distinct hours from %s ',...
-%             'order by hours asc'], tablename_jpeg));
-%     hours = hours.hours;
+     hours = fetch(conn, sprintf(['select distinct hours from %s ',...
+             'order by hours asc'], tablename_jpeg));
+     hours = hours.hours;
 
     for ss=1:8
         
         fprintf('sample size = %d\n',ss)
-        cont_hrs = 12;
-        rest_hrs = [6 7 8 9 10 11 13 14 15 16 17 18];
+        cont_hrs = 14;
+        rest_hrs = hours(hours~=cont_hrs);
         fpr = fpr4c(tablename_fit, cont.name, cont_hrs, ss);
         
         data = [];

@@ -9,12 +9,15 @@
 
 %%  Load Paths to Files and Data
 
-%     col_analyzer_path = '/home/sbp29/MATLAB/Matlab-Colony-Analyzer-Toolkit';
-%     bean_toolkit_path = '/home/sbp29/MATLAB/bean-matlab-toolkit';
-%     sau_toolkit_path = '/home/sbp29/MATLAB/sau-matlab-toolkit';
-%     addpath(genpath(col_analyzer_path));
-%     addpath(genpath(bean_toolkit_path));
-%     addpath(genpath(sau_toolkit_path));
+    cd /home/sbp29/MATLAB
+
+    addpath('/home/sbp29/MATLAB/Matlab-Colony-Analyzer-Toolkit')
+    addpath('/home/sbp29/MATLAB/bean-matlab-toolkit')
+    addpath('/home/sbp29/MATLAB/sau-matlab-toolkit')
+    addpath('/home/sbp29/MATLAB/sau-matlab-toolkit/grid-manipulation')
+    addpath('/home/sbp29/MATLAB/paris')
+    addpath('/home/sbp29/MATLAB/development')
+
     javaaddpath('/home/sbp29/MATLAB/mysql-connector-java-8.0.12.jar');
 
 %%  Add MCA toolkit to Path
@@ -27,7 +30,7 @@
     setdbprefs({'NullStringRead';'NullStringWrite';'NullNumberRead';'NullNumberWrite'},...
                   {'null';'null';'NaN';'NaN'})
 
-    expt_name = '4C2_R1';
+    expt_name = '4C3_GA';
     density = 6144;
     
 %   MySQL Table Details  
@@ -40,8 +43,8 @@
     tablename_pval      = sprintf('%s_%d_PVALUE',expt_name,density);
     tablename_res       = sprintf('%s_%d_RES',expt_name,density);
     
-    tablename_p2o       = 'VP_pos2orf_name1';
-    tablename_bpos      = 'VP_borderpos';
+    tablename_p2o       = '4C3_pos2orf_name';
+    tablename_bpos      = '4C3_borderpos';
     
 %   Reference Strain Name
 
@@ -51,10 +54,10 @@
 
     connectSQL;
     
-    p2c_info(1,:) = 'VP_pos2coor6144';
-    p2c_info(2,:) = '6144plate      ';
-    p2c_info(3,:) = '6144col        ';
-    p2c_info(4,:) = '6144row        ';
+    p2c_info(1,:) = '4C3_pos2coor6144';
+    p2c_info(2,:) = '6144plate       ';
+    p2c_info(3,:) = '6144col         ';
+    p2c_info(4,:) = '6144row         ';
 
     p2c = fetch(conn, sprintf(['select * from %s a ',...
         'order by a.%s, a.%s, a.%s'],...
@@ -92,8 +95,8 @@
             max_avg = max(bg.average);
             min_avg = min(bg.average);
 
-%             fig = figure('Renderer', 'painters', 'Position', [10 10 1920 1200],'visible','off');
-            figure()
+            fig = figure('Renderer', 'painters', 'Position', [10 10 1920 1200],'visible','off');
+%            figure()
             subplot(2,2,1)
             heatmap(col2grid(bg.average),'ColorLimits',[min_avg max_avg]);
             title(sprintf('Observed Pixel Count\n(Plate %d, %d hr)',iii,hours(i)))
@@ -109,14 +112,14 @@
             heatmap(col2grid(abs(bg.average - bg.bg)),'ColorLimits',[0 120]);
             title(sprintf('RMSE (%0.3f)',sqrt(nanmean(rmse(:,iii)))))
             colormap parula
-%             saveas(fig,sprintf('overview%d_%d.png',iii,hours(i)))
+            saveas(fig,sprintf('overview%d_%d.png',iii,hours(i)))
         end
     end
 
 %%  POWER, FALSE POSITIVE AND ES
     
     p = 0:0.01:1;
-    hours = 21;
+    %hours = 12.5;
     for ii=1:length(hours)
         if conn.isopen == 0
             connectSQL;
@@ -140,6 +143,7 @@
             cont_means(i,:) = mean(cont_dist(i,:));
         end
         
+        clear restmean reststd stat pvals;
         contmean = nanmean(cont_means);
         contstd = nanstd(cont_means);
 
@@ -148,8 +152,8 @@
 
         rest_dist =[];
         rest_means = [];
-        ss = 8;
-%         for ss=1:8
+%        ss = 8;
+         for ss=1:8
             for i=1:100000
                 rest_dist{ss}(i,:) = datasample(rest_data.fitness, ss, 'Replace', false);
                 rest_means{ss}(i,:) = mean(rest_dist{ss}(i,:));
@@ -177,19 +181,19 @@
             pow = (sum(temp_p<0.05)/length(rest_means{ss}))*100;
 
 %             figure()
-            fig = figure('Renderer', 'painters', 'Position', [10 10 480 300],'visible','off');
-            [f,xi] = ksdensity(cont_means);
-            plot(xi,f,'LineWidth',3)
-            hold on
-            [f,xi] = ksdensity(rest_means{ss});
-            plot(xi,f,'LineWidth',3)
-            legend('control','rest of plate')
-            title(sprintf('ES = %0.3f',ef_size))
-            xlabel('Fitness')
-            ylabel('Density')
-            grid on
-            hold off
-            saveas(fig,sprintf('es_%d_ss%d.png',hours(ii), ss))
+%            fig = figure('Renderer', 'painters', 'Position', [10 10 480 300],'visible','off');
+%            [f,xi] = ksdensity(cont_means);
+%            plot(xi,f,'LineWidth',3)
+%            hold on
+%            [f,xi] = ksdensity(rest_means{ss});
+%            plot(xi,f,'LineWidth',3)
+%            legend('control','rest of plate')
+%            title(sprintf('ES = %0.3f',ef_size))
+%            xlabel('Fitness')
+%            ylabel('Density')
+%            grid on
+%            hold off
+%            saveas(fig,sprintf('es_%d_ss%d.png',hours(ii), ss))
             
             len = length(pvals{ii}{ss});
             fpdat = [];
@@ -211,7 +215,7 @@
 %             ylim([0,1])
 %             saveas(fig,sprintf('pval_colonies_%d_ss%d.png',hours(ii),ss))
             
-%         end
+         end
 
     fprintf('time %d hrs done\n', hours(ii))
     end
@@ -237,12 +241,12 @@
     end
     contp(contp>1) = 1;
     
-    figure()
-    histogram(contp, 'NumBins', 20, 'Normalization', 'pdf')
-    grid on
-    xlabel('P Values')
-    ylabel('Probability Density')
-    title('NULL DISTRIBUTION')
+%    figure()
+%    histogram(contp, 'NumBins', 20, 'Normalization', 'pdf')
+%    grid on
+%    xlabel('P Values')
+%    ylabel('Probability Density')
+%    title('NULL DISTRIBUTION')
 
 %%  DATA UNDER PVAL CUT-OFFS
     
@@ -278,10 +282,10 @@
 
 %%  VIRTUAL PLATE POWER ANALYSIS
  
-    for ss=8
+    for ss=[1:8]
         fprintf('sample size = %d\n',ss)
-        cont_hrs = 18;
-        rest_hrs = 16;
+        cont_hrs = 12.5;
+        rest_hrs = [8,9,10,11,14,15.5,17,18];
         data = [];
     %     ss = 1;
 
@@ -451,82 +455,82 @@
     
 %%  EFFECT OF SCHEMES AND INTERLEAVING
 
-    expt1 = "4C2_R1";
-    expt2 = "4C2_R2";
-    expt3 = "4C2_R1_NIL";
-    expt4 = "4C2_R2_NIL";
-    
-%     hours = 24;
-    better12 = [];
-    better1n = [];
-    better2n = [];
-    
-    for i = 1:length(hours)
-        for iii = 1:length(n_plates.x6144plate)
-            bg1 = fetch(conn, sprintf(['select a.* ',...
-                'from %s_6144_FITNESS a, %s b ',...
-                'where a.hours = %d ',...
-                'and a.pos = b.pos ',...
-                'and b.%s = %d ',...
-                'order by b.%s, b.%s'],...
-                expt1,p2c_info(1,:),hours(i),p2c_info(2,:),...
-                iii,p2c_info(3,:),p2c_info(4,:)));
-
-            bg2 = fetch(conn, sprintf(['select a.* ',...
-                'from %s_6144_FITNESS a, %s b ',...
-                'where a.hours = %d ',...
-                'and a.pos = b.pos ',...
-                'and b.%s = %d ',...
-                'order by b.%s, b.%s'],...
-                expt2,p2c_info(1,:),hours(i),p2c_info(2,:),...
-                iii,p2c_info(3,:),p2c_info(4,:)));
-
-            bg3 = fetch(conn, sprintf(['select a.* ',...
-                'from %s_6144_FITNESS a, %s b ',...
-                'where a.hours = %d ',...
-                'and a.pos = b.pos ',...
-                'and b.%s = %d ',...
-                'order by b.%s, b.%s'],...
-                expt3,p2c_info(1,:),hours(i),p2c_info(2,:),...
-                iii,p2c_info(3,:),p2c_info(4,:)));
-
-            bg4 = fetch(conn, sprintf(['select a.* ',...
-                'from %s_6144_FITNESS a, %s b ',...
-                'where a.hours = %d ',...
-                'and a.pos = b.pos ',...
-                'and b.%s = %d ',...
-                'order by b.%s, b.%s'],...
-                expt4,p2c_info(1,:),hours(i),p2c_info(2,:),...
-                iii,p2c_info(3,:),p2c_info(4,:)));
-
-            for ii = 1:length(bg1.average)
-                e1((iii-1)*6144+ii,1) = (bg1.average(ii) - bg1.bg(ii)).^2;
-                e2((iii-1)*6144+ii,1) = (bg2.average(ii) - bg2.bg(ii)).^2;
-                e3((iii-1)*6144+ii,1) = (bg3.average(ii) - bg3.bg(ii)).^2;
-                e4((iii-1)*6144+ii,1) = (bg4.average(ii) - bg4.bg(ii)).^2;
-            end
-        end
-
-        e1 = e1(~isnan(e1));
-        e2 = e2(~isnan(e2));
-        e3 = e3(~isnan(e3));
-        e4 = e4(~isnan(e4));
-
-        better12 = [better12;[hours(i),sqrt(mean(e1.^2)),sqrt(mean(e2.^2)),...
-            ranksum(e1,e2,'tail','right'),...
-            ranksum(e1,e2,'tail','left')]];
-        better1n = [better1n;[hours(i),sqrt(mean(e1.^2)),sqrt(mean(e3.^2)),...
-            ranksum(e1,e3,'tail','right'),...
-            ranksum(e1,e3,'tail','left')]];
-        better2n = [better2n;[hours(i),sqrt(mean(e2.^2)),sqrt(mean(e4.^2)),...
-            ranksum(e2,e4,'tail','right'),...
-            ranksum(e2,e4,'tail','left')]];
-    end
-
-    
-    sum(better12(:,4)<0.05)/length(better12)
-    sum(better1n(:,4)<0.05)/length(better1n)
-    sum(better2n(:,4)<0.05)/length(better2n)
+%    expt1 = "4C2_R1";
+%    expt2 = "4C2_R2";
+%    expt3 = "4C2_R1_NIL";
+%    expt4 = "4C2_R2_NIL";
+%    
+%%     hours = 24;
+%    better12 = [];
+%    better1n = [];
+%    better2n = [];
+%    
+%    for i = 1:length(hours)
+%        for iii = 1:length(n_plates.x6144plate)
+%            bg1 = fetch(conn, sprintf(['select a.* ',...
+%                'from %s_6144_FITNESS a, %s b ',...
+%                'where a.hours = %d ',...
+%                'and a.pos = b.pos ',...
+%                'and b.%s = %d ',...
+%                'order by b.%s, b.%s'],...
+%                expt1,p2c_info(1,:),hours(i),p2c_info(2,:),...
+%                iii,p2c_info(3,:),p2c_info(4,:)));
+%
+%            bg2 = fetch(conn, sprintf(['select a.* ',...
+%                'from %s_6144_FITNESS a, %s b ',...
+%                'where a.hours = %d ',...
+%                'and a.pos = b.pos ',...
+%                'and b.%s = %d ',...
+%                'order by b.%s, b.%s'],...
+%                expt2,p2c_info(1,:),hours(i),p2c_info(2,:),...
+%                iii,p2c_info(3,:),p2c_info(4,:)));
+%
+%            bg3 = fetch(conn, sprintf(['select a.* ',...
+%                'from %s_6144_FITNESS a, %s b ',...
+%                'where a.hours = %d ',...
+%                'and a.pos = b.pos ',...
+%                'and b.%s = %d ',...
+%                'order by b.%s, b.%s'],...
+%                expt3,p2c_info(1,:),hours(i),p2c_info(2,:),...
+%                iii,p2c_info(3,:),p2c_info(4,:)));
+%
+%            bg4 = fetch(conn, sprintf(['select a.* ',...
+%                'from %s_6144_FITNESS a, %s b ',...
+%                'where a.hours = %d ',...
+%                'and a.pos = b.pos ',...
+%                'and b.%s = %d ',...
+%                'order by b.%s, b.%s'],...
+%                expt4,p2c_info(1,:),hours(i),p2c_info(2,:),...
+%                iii,p2c_info(3,:),p2c_info(4,:)));
+%
+%            for ii = 1:length(bg1.average)
+%                e1((iii-1)*6144+ii,1) = (bg1.average(ii) - bg1.bg(ii)).^2;
+%                e2((iii-1)*6144+ii,1) = (bg2.average(ii) - bg2.bg(ii)).^2;
+%                e3((iii-1)*6144+ii,1) = (bg3.average(ii) - bg3.bg(ii)).^2;
+%                e4((iii-1)*6144+ii,1) = (bg4.average(ii) - bg4.bg(ii)).^2;
+%            end
+%        end
+%
+%        e1 = e1(~isnan(e1));
+%        e2 = e2(~isnan(e2));
+%        e3 = e3(~isnan(e3));
+%        e4 = e4(~isnan(e4));
+%
+%        better12 = [better12;[hours(i),sqrt(mean(e1.^2)),sqrt(mean(e2.^2)),...
+%            ranksum(e1,e2,'tail','right'),...
+%            ranksum(e1,e2,'tail','left')]];
+%        better1n = [better1n;[hours(i),sqrt(mean(e1.^2)),sqrt(mean(e3.^2)),...
+%            ranksum(e1,e3,'tail','right'),...
+%            ranksum(e1,e3,'tail','left')]];
+%        better2n = [better2n;[hours(i),sqrt(mean(e2.^2)),sqrt(mean(e4.^2)),...
+%            ranksum(e2,e4,'tail','right'),...
+%            ranksum(e2,e4,'tail','left')]];
+%    end
+%
+%    
+%    sum(better12(:,4)<0.05)/length(better12)
+%    sum(better1n(:,4)<0.05)/length(better1n)
+%    sum(better2n(:,4)<0.05)/length(better2n)
     
     
 %     exec(conn, 'drop table 4C2_R2R2N_RMSE');
