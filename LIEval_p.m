@@ -30,7 +30,7 @@
     setdbprefs({'NullStringRead';'NullStringWrite';'NullNumberRead';'NullNumberWrite'},...
                   {'null';'null';'NaN';'NaN'})
 
-    expt_name = '4C3_GA';
+    expt_name = '4C3_GA_NIL';
     density = 6144;
     
 %   MySQL Table Details  
@@ -73,7 +73,7 @@
         p2c_info(2,:)));
     
     hours = fetch(conn, sprintf(['select distinct hours from %s ',...
-            'order by hours asc'], tablename_jpeg));
+            'order by hours asc'], tablename_fit));
     hours = hours.hours;
     
 %%  PLATEWISE RMSE
@@ -112,7 +112,8 @@
             heatmap(col2grid(abs(bg.average - bg.bg)),'ColorLimits',[0 120]);
             title(sprintf('RMSE (%0.3f)',sqrt(nanmean(rmse(:,iii)))))
             colormap parula
-            saveas(fig,sprintf('overview%d_%d.png',iii,hours(i)))
+            saveas(fig,sprintf(['/home/sbp29/MATLAB/4C3_Data/GA/S1NILAnalysis/',...
+                'overview/%s_OVW_%d_%d.png'],expt_name,hours(i),iii))
         end
     end
 
@@ -217,7 +218,7 @@
             
          end
 
-    fprintf('time %d hrs done\n', hours(ii))
+    fprintf('Time %d hrs Done.\n', hours(ii))
     end
     
 %%  NULL DISTRIBUTION
@@ -241,12 +242,14 @@
     end
     contp(contp>1) = 1;
     
+   fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
 %    figure()
-%    histogram(contp, 'NumBins', 20, 'Normalization', 'pdf')
-%    grid on
-%    xlabel('P Values')
-%    ylabel('Probability Density')
-%    title('NULL DISTRIBUTION')
+   histogram(contp, 'NumBins', 20, 'Normalization', 'pdf')
+   grid on
+   xlabel('P Values')
+   ylabel('Probability Density')
+   title(sprintf('NULL DISTRIBUTION\nTime = %d hrs | SS = %d',hours(ii),ss))
+   saveas(fig,sprintf('%s_nullDIST_%d_%d.png',expt_name,cont_hrs,ss))
 
 %%  DATA UNDER PVAL CUT-OFFS
     
@@ -272,7 +275,7 @@
             title(sprintf('Time = %d hrs',hours(ii)))
             xlim([0,1])
             ylim([0,1])
-            saveas(fig,sprintf('pval_colonies_%d.png',hours(ii)))
+            saveas(fig,sprintf('pval_colonies_%d_%d.png',hours(ii),ss))
         end
     end
     
@@ -282,7 +285,7 @@
 
 %%  VIRTUAL PLATE POWER ANALYSIS
  
-    for ss=[1:8]
+    for ss=1:8
         fprintf('sample size = %d\n',ss)
         cont_hrs = 12.5;
         rest_hrs = [8,9,10,11,14,15.5,17,18];
