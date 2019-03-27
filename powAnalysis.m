@@ -27,8 +27,8 @@
         setdbprefs({'NullStringRead';'NullStringWrite';'NullNumberRead';'NullNumberWrite'},...
                       {'null';'null';'NaN';'NaN'})
 
-        expt_name = '4C3_GL_NIL';
-        out_path = '/home/sbp29/MATLAB/4C3_Data/GL/S1NILAnalysis/power/';
+        expt_name = '4C3_GA4';
+        out_path = '/home/sbp29/MATLAB/4C3_Data/GA4/power/';
         density = 6144;
 
     %   MySQL Table Details  
@@ -36,7 +36,7 @@
         tablename_norm      = sprintf('%s_%d_NORM',expt_name,density);
         tablename_fit       = sprintf('%s_%d_FITNESS',expt_name,density);
 
-        tablename_p2o       = '4C3_pos2orf_name';
+        tablename_p2o       = '4C3_pos2orf_name4';
         tablename_bpos      = '4C3_borderpos';
 
     %   Reference Strain Name
