@@ -73,8 +73,9 @@
             cont_hrs = hours(t);
             rest_hrs = hours;%hours(hours~=cont_hrs);
             fprintf("Analysis for Control Hour = %0.1f Started.\n",cont_hrs);
-
-            for ss = 4:8
+            cdata = [];
+            
+            for ss = 8%4:8
                 fprintf('Control Hour = %0.1f | Sample Size = %d\n',cont_hrs,ss)
 
                 fpr = fpr4c(tablename_fit, cont.name, cont_hrs, ss);
@@ -192,8 +193,9 @@
                     pp = sum(temp_p<0.05);
                     pow = (pp/all)*100;
                     avg_diff = abs(nanmean(nanmean(cont_avg)) - nanmean(nanmean(rest_avg)));
-
-                    data = [data; ef_size, pow, avg_diff];
+                    
+                     cdata = [cdata; ef_size, pow, avg_diff];
+%                     data = [data; ef_size, pow, avg_diff];
 
             %         figure()
             %         fig = figure('Renderer', 'painters', 'Position', [10 10 480 300],'visible','off');
@@ -218,36 +220,65 @@
                 end
 
             %%  POWER vs ES
-
-                [~, i] = sort(data(:,1));
-                es_pow = data(i, :);
-
-                x{cont_hrs}{ss}   = es_pow(:,1);
-                y{cont_hrs}{ss}   = es_pow(:,2);
-                xx{cont_hrs}{ss}  = min(es_pow(:,1)):.001:max(es_pow(:,1));
-                yy{cont_hrs}{ss}  = interp1(x{cont_hrs}{ss},y{cont_hrs}{ss},...
-                    xx{cont_hrs}{ss},'pchip');
-
-        %         figure()
-                fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
-                plot(xx{cont_hrs}{ss},yy{cont_hrs}{ss},'Color',[0.5 0.75 1],'LineWidth',2)
-                grid on
-                grid minor
-                xlim([0.6,1.4])
-                ylim([-1,101])
-                xlabel('Effect Size (Relative Fitness)')
-                ylabel('Power')
-                hold on
-                scatter(x{cont_hrs}{ss}, y{cont_hrs}{ss},'MarkerEdgeColor',[0 .5 .5],...
-                          'MarkerFaceColor',[0 .7 .7],...
-                          'LineWidth',2);
-                hold on
-                title(sprintf('ES V/S Power\nTime = %dhrs | SS = %d | FPR = %.2f%%',cont_hrs, ss, fpr))
-                hold off
-                saveas(fig,sprintf('%s%s_powES_%d_%d.png',...
-                    out_path,expt_name,cont_hrs,ss))
+% 
+%                 [~, i] = sort(data(:,1));
+%                 es_pow = data(i, :);
+% 
+%                 x{cont_hrs}{ss}   = es_pow(:,1);
+%                 y{cont_hrs}{ss}   = es_pow(:,2);
+%                 xx{cont_hrs}{ss}  = min(es_pow(:,1)):.001:max(es_pow(:,1));
+%                 yy{cont_hrs}{ss}  = interp1(x{cont_hrs}{ss},y{cont_hrs}{ss},...
+%                     xx{cont_hrs}{ss},'pchip');
+% 
+%         %         figure()
+%                 fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
+%                 plot(xx{cont_hrs}{ss},yy{cont_hrs}{ss},'Color',[0.5 0.75 1],'LineWidth',2)
+%                 grid on
+%                 grid minor
+%                 xlim([0.6,1.4])
+%                 ylim([-1,101])
+%                 xlabel('Effect Size (Relative Fitness)')
+%                 ylabel('Power')
+%                 hold on
+%                 scatter(x{cont_hrs}{ss}, y{cont_hrs}{ss},'MarkerEdgeColor',[0 .5 .5],...
+%                           'MarkerFaceColor',[0 .7 .7],...
+%                           'LineWidth',2);
+%                 hold on
+%                 title(sprintf('ES V/S Power\nTime = %dhrs | SS = %d | FPR = %.2f%%',cont_hrs, ss, fpr))
+%                 hold off
+%                 saveas(fig,sprintf('%s%s_powES_%d_%d.png',...
+%                     out_path,expt_name,cont_hrs,ss))
             end
+%%  COMPOSITE ES AND POW RELATIONSHIP
             
+            [~, i] = sort(cdata(:,1));
+            es_pow = cdata(i, :);
+
+            x   = es_pow(:,1);
+            y   = es_pow(:,2);
+            xx  = min(es_pow(:,1)):.001:max(es_pow(:,1));
+            yy  = interp1(x,y,xx,'pchip');
+
+    %         figure()
+            fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
+            plot(xx,yy,'Color',[0.5 0.75 1],'LineWidth',2)
+            grid on
+            grid minor
+            xlim([0.5,1.5])
+            ylim([-1,101])
+            xlabel('Effect Size (Relative Fitness)')
+            ylabel('Power')
+            hold on
+            scatter(x, y,'MarkerEdgeColor',[0 .5 .5],...
+                      'MarkerFaceColor',[0 .7 .7],...
+                      'LineWidth',2);
+            hold on
+            title(sprintf('ES V/S Power\n%s | SS = %d | FPR = %.2f%%',expt_name, ss, fpr))
+            hold off
+            saveas(fig,sprintf('%s%s_powES_%d.png',...
+                out_path,expt_name,ss))
+            
+%%            
             fprintf('powAnalysis for %s at %d hrs is done.\n',...
                 expt_name,cont_hrs)
             send_message(4124992194,'fi','powAnalysis Update',...
