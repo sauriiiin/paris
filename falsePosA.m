@@ -30,7 +30,8 @@
 
         expt_name = '4C3_GA1';
         expt = 'FS1-1';
-        out_path = '/home/sbp29/MATLAB/4C3_Data/GA/S1Analysis/power/';
+%         out_path = '/home/sbp29/MATLAB/4C3_Data/GA/S1Analysis/power/';
+        out_path = '/Users/saur1n/Desktop/4C3/Analysis/GA/S1Analysis/power/tech/';
         density = 6144;
         
         fprintf("Analysis for %s Started.\n",expt_name);
@@ -46,7 +47,7 @@
                  'order by hours asc'], tablename_pval));
         hours = hours.hours;
         
-        ul = 0.005:0.005:0.100;
+        ul = 0.005:0.005:0.120;
 
         for t = 5:length(hours)
 %%  GET EFFECT SIZE DATA
@@ -76,11 +77,11 @@
             x   = ul;
             y   = data;
 
-            figure()
-%             fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
+%             figure()
+            fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
             grid on
             grid minor
-            ylim([-0.2,max+0.2])
+            ylim([-max*0.01,max*1.01])
             xlabel('| 1 - Effect Size |')
             ylabel('False Positive Rate')
             hold on

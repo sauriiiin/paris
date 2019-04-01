@@ -29,7 +29,8 @@
 
         expt_name = '4C3_GA1';
         expt = 'FS1-1';
-        out_path = '/home/sbp29/MATLAB/4C3_Data/GA/S1Analysis/power/';
+        out_path = '/home/sbp29/MATLAB/4C3_Data/GA/S1Analysis/fnfp/';
+%         out_path = '/Users/saur1n/Desktop/4C3/Analysis/GA/S1Analysis/fnfp/';
         density = 6144;
 
     %   MySQL Table Details  
@@ -370,14 +371,14 @@
         grid on
         grid minor
         ylim([-1,101])
-        xlabel('Log10(Effect Size)')
+        xlabel('Log10(| 1- Effect Size |)')
         ylabel('False Negative Rate')
         hold on
         scatter(x, y,'MarkerEdgeColor',[0 .5 .5],...
                   'MarkerFaceColor',[0 .7 .7],...
                   'LineWidth',2);
         hold on
-        title(sprintf('%s\nES V/S FN',expt))
+        title(sprintf('ES V/S FN\n%s',expt))
         hold off
         saveas(fig,sprintf('%s%s_TFNES_%d.png',out_path,expt_name,ss))
 
