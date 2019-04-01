@@ -27,9 +27,9 @@
         setdbprefs({'NullStringRead';'NullStringWrite';'NullNumberRead';'NullNumberWrite'},...
                       {'null';'null';'NaN';'NaN'})
 
-        expt_name = '4C3_GA1';
-        expt = 'FS1-1';
-        out_path = '/home/sbp29/MATLAB/4C3_Data/GA/S1Analysis/fnfp/';
+        expt_name = '4C3_GA4';
+        expt = 'FS1-4';
+        out_path = '/home/sbp29/MATLAB/4C3_Data/GA4/fnfp/';
 %         out_path = '/Users/saur1n/Desktop/4C3/Analysis/GA/S1Analysis/fnfp/';
         density = 6144;
 
@@ -39,7 +39,7 @@
         tablename_fit       = sprintf('%s_%d_FITNESS',expt_name,density);
         tablename_pval       = sprintf('%s_%d_PVALUE',expt_name,density);
 
-        tablename_p2o       = '4C3_pos2orf_name1';
+        tablename_p2o       = '4C3_pos2orf_name4';
         tablename_bpos      = '4C3_borderpos';
 
         temp_norm      = sprintf('%s_TEMP_%d_NORM',expt_name,density);
