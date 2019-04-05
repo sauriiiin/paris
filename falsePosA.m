@@ -19,7 +19,7 @@
         addpath('/home/sbp29/MATLAB/paris')
         addpath('/home/sbp29/MATLAB/development')
 
-        javaaddpath('/home/sbp29/MATLAB/mysql-connector-java-8.0.12.jar');
+        javaaddpath('/home/sbp29/MATLAB/mysql-connector-java-8.0.15.jar');
 
     %%  Initialization
 
@@ -31,7 +31,7 @@
         expt_name = '4C3_GA1';
         expt = 'FS1-1';
 %         out_path = '/home/sbp29/MATLAB/4C3_Data/GA/S1Analysis/power/';
-        out_path = '/Users/saur1n/Desktop/4C3/Analysis/GA/S1Analysis/power/tech/';
+        out_path = '/Users/saur1n/Desktop/4C3/Analysis/GA/S1Analysis/fnfp/';
         density = 6144;
         
         fprintf("Analysis for %s Started.\n",expt_name);
@@ -76,9 +76,11 @@
             
             x   = ul;
             y   = data;
+            yy = smooth(x,y,'rloess');
 
 %             figure()
             fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
+            plot(x,yy,'r--','LineWidth',3)
             grid on
             grid minor
             ylim([-max*0.01,max*1.01])
@@ -88,6 +90,7 @@
             scatter(x, y,'MarkerEdgeColor',[0 .5 .5],...
                       'MarkerFaceColor',[0 .7 .7],...
                       'LineWidth',2);
+%             legend('fitted curve','real data')
             hold on
             title(sprintf('ES V/S FP\n%s | Time = %dhrs | FPR = %.2f%%',...
                 expt,hours(t), max))

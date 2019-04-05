@@ -18,7 +18,7 @@
         addpath('/home/sbp29/MATLAB/paris')
         addpath('/home/sbp29/MATLAB/development')
 
-        javaaddpath('/home/sbp29/MATLAB/mysql-connector-java-8.0.12.jar');
+        javaaddpath('/home/sbp29/MATLAB/mysql-connector-java-8.0.15.jar');
 
     %%  Initialization
 
@@ -365,9 +365,14 @@
         es_fn = cdata(i, :);
         x   = log10(es_fn(:,3));
         y   = es_fn(:,4);
-
+%         Fit = polyfit(x,y,9);
+%         Fit = fit(x,y,'poly2');
+        yy = smooth(x,smooth(x,y,'moving'));
+        
 %         figure()
         fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
+%         plot(x,polyval(Fit,x),'r--','LineWidth',3)
+        plot(x,yy,'r--','LineWidth',3)
         grid on
         grid minor
         ylim([-1,101])
@@ -377,6 +382,7 @@
         scatter(x, y,'MarkerEdgeColor',[0 .5 .5],...
                   'MarkerFaceColor',[0 .7 .7],...
                   'LineWidth',2);
+        legend('fitted curve','real data')
         hold on
         title(sprintf('ES V/S FN\n%s',expt))
         hold off
