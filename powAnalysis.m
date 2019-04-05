@@ -196,29 +196,31 @@
                     pow = (pp/all)*100;
                     avg_diff = abs(nanmean(nanmean(cont_avg)) - nanmean(nanmean(rest_avg)));
                     
-                     cdata = [cdata; ef_size, pow, avg_diff];
+                    cdata = [cdata; ef_size, pow, avg_diff];
 %                     data = [data; ef_size, pow, avg_diff];
 
-            %         figure()
-            %         fig = figure('Renderer', 'painters', 'Position', [10 10 480 300],'visible','off');
-            %         [f,xi] = ksdensity(cont_means);
-            %         plot(xi,f,'LineWidth',3)
-            %         xlim([0.75,1.25])
-            %         ylim([0,30])
-            %         hold on
-            %         [f,xi] = ksdensity(rest_means);
-            %         plot(xi,f,'LineWidth',3)
-            %         legend('control','rest of plate')
-            %         title(sprintf(['TimeC = %d hrs | TimeR = %d hrs \n ',...
-            %             'ES = %0.3f | Power = %0.3f'],...
-            %             cont_hrs,rest_hrs(ii),ef_size,pow))
-            %         xlabel('Fitness')
-            %         ylabel('Density')
-            %         grid on
-            %         grid minor
-            %         hold off
-            %         saveas(fig,sprintf('vp_powes_%d_%d.png',cont_hrs,rest_hrs(ii)))
-                fprintf('%0.1f hrs V/S %0.1f hrs done!\n', cont_hrs,rest_hrs(ii))
+% %                     figure()
+%                     fig = figure('Renderer', 'painters', 'Position', [10 10 480 300],'visible','off');
+%                     [f,xi] = ksdensity(cont_means);
+%                     plot(xi,f,'LineWidth',3)
+%                     xlim([0.75,1.25])
+%                     ylim([0,30])
+%                     hold on
+%                     [f,xi] = ksdensity(rest_means);
+%                     plot(xi,f,'LineWidth',3)
+%                     legend('control','rest of plate')
+%                     title(sprintf(['TimeC = %d hrs | TimeR = %d hrs \n ',...
+%                         'ES = %0.3f | Power = %0.3f'],...
+%                         cont_hrs,rest_hrs(ii),ef_size,pow))
+%                     xlabel('Fitness')
+%                     ylabel('Density')
+%                     grid on
+%                     grid minor
+%                     hold off
+%                     saveas(fig,sprintf('vp_powes_%d_%d.png',cont_hrs,rest_hrs(ii)))
+%                     saveas(fig,sprintf('%s%s_ContRest_%d%d_%d.png',...
+%                         out_path,expt_name,cont_hrs,rest_hrs(ii),ss))
+%                 fprintf('%0.1f hrs V/S %0.1f hrs done!\n', cont_hrs,rest_hrs(ii))
                 end
 
             %%  POWER vs ES
@@ -260,31 +262,31 @@
         end
 %%  COMPOSITE ES AND POW RELATIONSHIP
             
-        [~, i] = sort(cdata(:,1));
-        es_pow = cdata(i, :);
-
-        x   = es_pow(:,1);
-        y   = es_pow(:,2);
-        xx  = min(es_pow(:,1)):.001:max(es_pow(:,1));
-        yy  = interp1(x,y,xx,'pchip');
-
-%         figure()
-        fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
-        plot(xx,yy,'Color',[0.5 0.75 1],'LineWidth',2)
-        grid on
-        grid minor
-        xlim([0.6,1.4])
-        ylim([-1,101])
-        xlabel('Effect Size (Relative Fitness)')
-        ylabel('Power')
-        hold on
-        scatter(x, y,'MarkerEdgeColor',[0 .5 .5],...
-                  'MarkerFaceColor',[0 .7 .7],...
-                  'LineWidth',2);
-        hold on
-        title(sprintf('%s\nES V/S Power',expt))
-        hold off
-        saveas(fig,sprintf('%s%s_powES_%d.png',out_path,expt_name,ss))
+%         [~, i] = sort(cdata(:,1));
+%         es_pow = cdata(i, :);
+% 
+%         x   = es_pow(:,1);
+%         y   = es_pow(:,2);
+%         xx  = min(es_pow(:,1)):.001:max(es_pow(:,1));
+%         yy  = interp1(x,y,xx,'pchip');
+% 
+% %         figure()
+%         fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
+%         plot(xx,yy,'Color',[0.5 0.75 1],'LineWidth',2)
+%         grid on
+%         grid minor
+%         xlim([0.6,1.4])
+%         ylim([-1,101])
+%         xlabel('Effect Size (Relative Fitness)')
+%         ylabel('Power')
+%         hold on
+%         scatter(x, y,'MarkerEdgeColor',[0 .5 .5],...
+%                   'MarkerFaceColor',[0 .7 .7],...
+%                   'LineWidth',2);
+%         hold on
+%         title(sprintf('%s\nES V/S Power',expt))
+%         hold off
+%         saveas(fig,sprintf('%s%s_powES_%d.png',out_path,expt_name,ss))
 
         fprintf("Power V/S Effect Size Analysis For %s Complete!\n",expt_name);
         send_message(4124992194,'fi','powAnalysis Complete',...
