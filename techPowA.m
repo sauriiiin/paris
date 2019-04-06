@@ -27,8 +27,8 @@
         setdbprefs({'NullStringRead';'NullStringWrite';'NullNumberRead';'NullNumberWrite'},...
                       {'null';'null';'NaN';'NaN'})
 
-        expt_name = '4C3_GA4';
-        expt = 'FS1-4';
+        expt_name = '4C3_GA1';
+        expt = 'FS1-1';
         out_path = '/home/sbp29/MATLAB/4C3_Data/GA4/fnfp/';
 %         out_path = '/Users/saur1n/Desktop/4C3/Analysis/GA/S1Analysis/fnfp/';
         density = 6144;
@@ -272,27 +272,26 @@
                 cdata = [cdata; ef_size, pow, abs(1-ef_size), 100-pow];
                 data = [data; ef_size, pow, abs(1-ef_size), 100-pow];
                 
-% %                 figure()
-%                 fig = figure('Renderer', 'painters', 'Position', [10 10 480 300],'visible','off');
-%                 [f,xi] = ksdensity(cont_fit);
-%                 plot(xi,f,'LineWidth',3)
-%                 xlim([0.75,1.25])
+%                 figure()
+                fig = figure('Renderer', 'painters', 'Position', [10 10 480 300],'visible','off');
+                [f,xi] = ksdensity(cont_fit);
+                plot(xi,f,'LineWidth',3)
+                xlim([0.75,1.25])
 %                 ylim([0,30])
-%                 hold on
-%                 [f,xi] = ksdensity(rest_fit);
-%                 plot(xi,f,'LineWidth',3)
-%                 legend('control','rest of plate')
-%                 title(sprintf(['TimeC = %d hrs | TimeR = %d hrs \n ',...
-%                     'ES = %0.3f | Power = %0.3f'],...
-%                     cont_hrs,rest_hrs(ii),ef_size,pow))
-%                 xlabel('Fitness')
-%                 ylabel('Density')
-%                 grid on
-%                 grid minor
-%                 hold off
-%                 saveas(fig,sprintf('vp_powes_%d_%d.png',cont_hrs,rest_hrs(ii)))
-%                 saveas(fig,sprintf('%s%s_ContRest_%d%d_%d.png',...
-%                     out_path,expt_name,cont_hrs,rest_hrs(ii),ss))
+                hold on
+                [f,xi] = ksdensity(rest_fit);
+                plot(xi,f,'LineWidth',3)
+                legend('control','rest of plate')
+                title(sprintf(['%s\n',...
+                    'Time = (%d, %d) hrs | ES = %0.3f | Power = %0.3f'],...
+                    expt,cont_hrs,rest_hrs(iii),ef_size,pow))
+                xlabel('Fitness')
+                ylabel('Density')
+                grid on
+                grid minor
+                hold off
+                saveas(fig,sprintf('%s%s_ContRest_%d%d.png',...
+                    out_path,expt_name,cont_hrs,rest_hrs(iii)))
             end
 
         %%  POWER vs ES
