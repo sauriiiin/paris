@@ -8,16 +8,16 @@
 
 %%  Load Paths to Files and Data
 
-%     cd /home/sbp29/MATLAB
-% 
-%     addpath('/home/sbp29/MATLAB/Matlab-Colony-Analyzer-Toolkit')
-%     addpath('/home/sbp29/MATLAB/bean-matlab-toolkit')
-%     addpath('/home/sbp29/MATLAB/sau-matlab-toolkit')
-%     addpath('/home/sbp29/MATLAB/sau-matlab-toolkit/grid-manipulation')
-%     addpath('/home/sbp29/MATLAB/paris')
-%     addpath('/home/sbp29/MATLAB/development')
-% 
-%     javaaddpath('/home/sbp29/MATLAB/mysql-connector-java-8.0.15.jar');
+    col_analyzer_path = '/Users/saur1n/Documents/GitHub/Matlab-Colony-Analyzer-Toolkit';
+    bean_toolkit_path = '/Users/saur1n/Documents/GitHub/bean-matlab-toolkit';
+    sau_toolkit_path = '/Users/saur1n/Documents/GitHub/sau-matlab-toolkit';
+    addpath(genpath(col_analyzer_path));
+    addpath(genpath(bean_toolkit_path));
+    addpath(genpath(sau_toolkit_path));
+%     javaaddpath(uigetfile());
+
+%%  Add MCA toolkit to Path
+%     add_mca_toolkit_to_path
 
 %%  Initialization
 
@@ -51,7 +51,7 @@
                  'order by hours asc'], tablename_fit));
     hours = hours.hours;
 
-%%
+%%  CREATING DISTRIBUTION PLOTS
 
     contpos = fetch(conn, sprintf(['select pos from %s ',...
         'where orf_name = ''%s'' and pos < 10000 ',...
@@ -89,3 +89,5 @@
 %         saveas(fig,sprintf('%s%s_ContDist_%d.png',...
 %                     out_path,expt_name,cont_hrs))
     end
+    
+%%  END
