@@ -26,10 +26,10 @@
     setdbprefs({'NullStringRead';'NullStringWrite';'NullNumberRead';'NullNumberWrite'},...
                   {'null';'null';'NaN';'NaN'})
 
-    expt_name = '4C3_GA1';
-    expt = 'FS1-1';
+    expt_name = '4C3_GA4';
+    expt = 'FS1-4';
 %     out_path = '/home/sbp29/MATLAB/4C3_Data/GA1/contdist/';
-    out_path = '/Users/saur1n/Desktop/4C3/Analysis/GA/S1Analysis/contdist/';
+    out_path = '/Users/saur1n/Desktop/4C3/Analysis/GA4/contdist/';
     density = 6144;
 
 %   MySQL Table Details  
@@ -38,7 +38,7 @@
     tablename_fit       = sprintf('%s_%d_FITNESS',expt_name,density);
 %     tablename_pval       = sprintf('%s_%d_PVALUE',expt_name,density);
 
-    tablename_p2o       = '4C3_pos2orf_name1';
+    tablename_p2o       = '4C3_pos2orf_name4';
     tablename_bpos      = '4C3_borderpos';
     
 %   Reference Strain Name
@@ -60,8 +60,9 @@
         tablename_p2o,cont.name,tablename_bpos));
     contpos = contpos.pos + [110000,120000,130000,140000,...
         210000,220000,230000,240000];
+    yy = 0:0.1:25;
 
-    for iii = 1:length(hours)
+    for iii = 7:length(hours)
         contfit = [];
         for ii = 1:length(contpos)
             temp = fetch(conn, sprintf(['select fitness from %s ',...
@@ -74,20 +75,32 @@
         end
 
         contmean = nanmean(contfit);
+        contmed = nanmedian(contfit);
         contstd = nanstd(contfit);
+        
+        perc25 = prctile(contfit,2.5);
+        perc975 = prctile(contfit,97.5);
 
-%         fig = figure('Renderer', 'painters', 'Position', [10 10 480 300],'visible','off');
-        figure()
+        fig = figure('Renderer', 'painters', 'Position', [10 10 960 600],'visible','off');
+%         figure()
         [f,xi] = ksdensity(contfit);
         plot(xi,f,'LineWidth',3)
+        hold on
+        plot(ones(1,length(yy))*perc25,yy,'--r',...
+            ones(1,length(yy))*perc975,yy,'--r',...
+            ones(1,length(yy))*contmed,yy,'--r','LineWidth',1)
+        xlim([0.9,1.15])
+        ylim([0,25])
+        hold off
         grid on
         grid minor
         xlabel('Fitness')
         ylabel('Density')
-        title(sprintf('%s | Control Distribution\nMean = %0.4f',...
-            expt,contmean))
-%         saveas(fig,sprintf('%s%s_ContDist_%d.png',...
-%                     out_path,expt_name,cont_hrs))
+        title(sprintf(['%s | Control Distribution | Time = %d hrs\n',...
+            'Perc 2.5 = %0.4f | Mean = %0.4f | Perc 50 = %0.4f | Perc 97.5 = %0.4f'],...
+            expt,hours(iii),perc25,contmean,contmed,perc975))
+        saveas(fig,sprintf('%s%s_ContDist_%d.png',...
+                    out_path,expt_name,hours(iii)))
     end
     
 %%  END
