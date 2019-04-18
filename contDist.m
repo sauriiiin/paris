@@ -26,8 +26,8 @@
     setdbprefs({'NullStringRead';'NullStringWrite';'NullNumberRead';'NullNumberWrite'},...
                   {'null';'null';'NaN';'NaN'})
 
-    expt_name = '4C3_GA4';
-    expt = 'FS1-4';
+    expt_name = '4C3_GA1';
+    expt = 'FS1-1';
 %     out_path = '/home/sbp29/MATLAB/4C3_Data/GA1/contdist/';
     out_path = '/Users/saur1n/Desktop/4C3/Analysis/GA4/contdist/';
     density = 6144;
@@ -38,7 +38,7 @@
     tablename_fit       = sprintf('%s_%d_FITNESS',expt_name,density);
 %     tablename_pval       = sprintf('%s_%d_PVALUE',expt_name,density);
 
-    tablename_p2o       = '4C3_pos2orf_name4';
+    tablename_p2o       = '4C3_pos2orf_name1';
     tablename_bpos      = '4C3_borderpos';
     
 %   Reference Strain Name
@@ -64,42 +64,72 @@
 
     for iii = 7:length(hours)
         contfit = [];
+        contavg = [];
         for ii = 1:length(contpos)
-            temp = fetch(conn, sprintf(['select fitness from %s ',...
+            temp = fetch(conn, sprintf(['select average, fitness from %s ',...
                 'where hours = %d and pos in (%s) ',...
                 'and fitness is not null'],tablename_fit,hours(iii),...
                 sprintf('%d,%d,%d,%d,%d,%d,%d,%d',contpos(ii,:))));
             if nansum(temp.fitness) > 0
                 contfit = [contfit, nanmean(temp.fitness)];
+                contavg = [contavg, nanmean(temp.average)];
             end
         end
 
-        contmean = nanmean(contfit);
-        contmed = nanmedian(contfit);
-        contstd = nanstd(contfit);
+        contfmean = nanmean(contfit);
+        contfmed = nanmedian(contfit);
+        contfstd = nanstd(contfit);
         
-        perc25 = prctile(contfit,2.5);
-        perc975 = prctile(contfit,97.5);
+        perc25f = prctile(contfit,2.5);
+        perc975f = prctile(contfit,97.5);
 
+%         fig = figure('Renderer', 'painters', 'Position', [10 10 960 600],'visible','off');
+% %         figure()
+%         [f,xi] = ksdensity(contfit);
+%         plot(xi,f,'LineWidth',3)
+%         hold on
+%         plot(ones(1,length(yy))*perc25f,yy,'--r',...
+%             ones(1,length(yy))*perc975f,yy,'--r',...
+%             ones(1,length(yy))*contfmed,yy,'--r','LineWidth',1)
+%         xlim([0.9,1.15])
+%         ylim([0,25])
+%         hold off
+%         grid on
+%         grid minor
+%         xlabel('Fitness')
+%         ylabel('Density')
+%         title(sprintf(['%s | Control Distribution (Fitness) | Time = %d hrs\n',...
+%             'Perc 2.5 = %0.4f | Mean = %0.4f | Perc 50 = %0.4f | Perc 97.5 = %0.4f'],...
+%             expt,hours(iii),perc25f,contfmean,contfmed,perc975f))
+%         saveas(fig,sprintf('%s%s_ContDist_%d.png',...
+%                     out_path,expt_name,hours(iii)))
+
+        contamean = nanmean(contavg);
+        contamed = nanmedian(contavg);
+        contastd = nanstd(contavg);
+        
+        perc25a = prctile(contavg,2.5);
+        perc975a = prctile(contavg,97.5);
+                          
         fig = figure('Renderer', 'painters', 'Position', [10 10 960 600],'visible','off');
 %         figure()
-        [f,xi] = ksdensity(contfit);
+        [f,xi] = ksdensity(contavg);
         plot(xi,f,'LineWidth',3)
         hold on
-        plot(ones(1,length(yy))*perc25,yy,'--r',...
-            ones(1,length(yy))*perc975,yy,'--r',...
-            ones(1,length(yy))*contmed,yy,'--r','LineWidth',1)
-        xlim([0.9,1.15])
-        ylim([0,25])
+        plot(ones(1,length(yy))*perc25a,yy,'--r',...
+            ones(1,length(yy))*perc975a,yy,'--r',...
+            ones(1,length(yy))*contamed,yy,'--r','LineWidth',1)
+%         xlim([0.9,1.15])
+        ylim([0,0.02])
         hold off
         grid on
         grid minor
-        xlabel('Fitness')
+        xlabel('Pixel Count')
         ylabel('Density')
-        title(sprintf(['%s | Control Distribution | Time = %d hrs\n',...
+        title(sprintf(['%s | Control Distribution (Pixel Count) | Time = %d hrs\n',...
             'Perc 2.5 = %0.4f | Mean = %0.4f | Perc 50 = %0.4f | Perc 97.5 = %0.4f'],...
-            expt,hours(iii),perc25,contmean,contmed,perc975))
-        saveas(fig,sprintf('%s%s_ContDist_%d.png',...
+            expt,hours(iii),perc25a,contamean,contamed,perc975a))
+        saveas(fig,sprintf('%s%s_ContDistPix_%d.png',...
                     out_path,expt_name,hours(iii)))
     end
     
