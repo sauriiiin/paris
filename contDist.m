@@ -21,7 +21,7 @@
 
 %%  Initialization
 
-%     Set preferences with setdbprefs.
+%   Set preferences with setdbprefs.
     setdbprefs('DataReturnFormat', 'structure');
     setdbprefs({'NullStringRead';'NullStringWrite';'NullNumberRead';'NullNumberWrite'},...
                   {'null';'null';'NaN';'NaN'})
@@ -33,11 +33,9 @@
     density = 6144;
 
 %   MySQL Table Details  
-
 %     tablename_norm      = sprintf('%s_%d_NORM',expt_name,density);
     tablename_fit       = sprintf('%s_%d_FITNESS',expt_name,density);
 %     tablename_pval       = sprintf('%s_%d_PVALUE',expt_name,density);
-
     tablename_p2o       = '4C3_pos2orf_name1';
     tablename_bpos      = '4C3_borderpos';
     
@@ -97,7 +95,7 @@
 %         xlabel('Fitness')
 %         ylabel('Density')
 %         title(sprintf(['%s | Control Distribution (Fitness) | Time = %d hrs\n',...
-%             'Perc 2.5 = %0.4f | Mean = %0.4f | Perc 50 = %0.4f | Perc 97.5 = %0.4f'],...
+%             'Perc 2.5 = %0.1f | Mean = %0.1f | Median = %0.1f | Perc 97.5 = %0.1f'],...
 %             expt,hours(iii),perc25f,contfmean,contfmed,perc975f))
 %         saveas(fig,sprintf('%s%s_ContDist_%d.png',...
 %                     out_path,expt_name,hours(iii)))
@@ -115,17 +113,16 @@
         
         xmin = round(min(min(contavg)) - 50, -1);
         xmax = round(max(max(contavg)) + 50, -1);
-
+        splt = {'TL1','TR1','BL1','BR1','TL2','TR2','BL2','BR2'};
         for i = 1:size(contpos,2)
             contamean = nanmean(contavg(i,:));
             contamed = nanmedian(contavg(i,:));
             contastd = nanstd(contavg(i,:));
-
             perc25a = prctile(contavg(i,:),2.5);
             perc975a = prctile(contavg(i,:),97.5);
 
-    %         fig = figure('Renderer', 'painters', 'Position', [10 10 960 600],'visible','off');
-            figure()
+            fig = figure('Renderer', 'painters', 'Position', [10 10 960 600],'visible','off');
+%             figure()
             [f,xi] = ksdensity(contavg(i,:));
             plot(xi,f,'LineWidth',3)
             hold on
@@ -139,11 +136,12 @@
             grid minor
             xlabel('Pixel Count')
             ylabel('Density')
-            title(sprintf(['%s | Control Distribution (Pixel Count) | Time = %d hrs\n',...
-                'Perc 2.5 = %0.4f | Mean = %0.4f | Perc 50 = %0.4f | Perc 97.5 = %0.4f'],...
-                expt,hours(iii),perc25a,contamean,contamed,perc975a))
-    %         saveas(fig,sprintf('%s%s_ContDistPix_%d.png',...
-    %                     out_path,expt_name,hours(iii)))
+            title(sprintf(['%s | Control Distribution (Pixel Count) - %s | Time = %d hrs\n',...
+                'Perc 2.5 = %0.1f | Mean = %0.1f | Median = %0.1f | Perc 97.5 = %0.1f'],...
+                expt,splt{i},hours(iii),...
+                perc25a,contamean,contamed,perc975a))
+            saveas(fig,sprintf('%s%s_ContDistPix_%s_%d.png',...
+                        out_path,expt_name,hours(iii),splt{i}))
         end
     end
     
