@@ -29,7 +29,7 @@
     expt_name = '4C3_GA1';
     expt = 'FS1-1';
 %     out_path = '/home/sbp29/MATLAB/4C3_Data/GA1/contdist/';
-    out_path = '/Users/saur1n/Desktop/4C3/Analysis/GA4/contdist/';
+    out_path = '/Users/saur1n/Desktop/4C3/Analysis/GA/S1Analysis/contdist/';
     density = 6144;
 
 %   MySQL Table Details  
@@ -63,26 +63,24 @@
     yy = 0:0.1:25;
 
     for iii = 7:length(hours)
-        contfit = [];
-        contavg = [];
-        for ii = 1:length(contpos)
-            temp = fetch(conn, sprintf(['select average, fitness from %s ',...
-                'where hours = %d and pos in (%s) ',...
-                'and fitness is not null'],tablename_fit,hours(iii),...
-                sprintf('%d,%d,%d,%d,%d,%d,%d,%d',contpos(ii,:))));
-            if nansum(temp.fitness) > 0
-                contfit = [contfit, nanmean(temp.fitness)];
-                contavg = [contavg, nanmean(temp.average)];
-            end
-        end
-
-        contfmean = nanmean(contfit);
-        contfmed = nanmedian(contfit);
-        contfstd = nanstd(contfit);
-        
-        perc25f = prctile(contfit,2.5);
-        perc975f = prctile(contfit,97.5);
-
+%         contfit = [];
+%         for ii = 1:length(contpos)
+%             temp = fetch(conn, sprintf(['select fitness from %s ',...
+%                 'where hours = %d and pos in (%s) ',...
+%                 'and fitness is not null'],tablename_fit,hours(iii),...
+%                 sprintf('%d,%d,%d,%d,%d,%d,%d,%d',contpos(ii,:))));
+%             if nansum(temp.fitness) > 0
+%                 contfit = [contfit, nanmean(temp.fitness)];
+%             end
+%         end
+% 
+%         contfmean = nanmean(contfit);
+%         contfmed = nanmedian(contfit);
+%         contfstd = nanstd(contfit);
+%         
+%         perc25f = prctile(contfit,2.5);
+%         perc975f = prctile(contfit,97.5);
+% 
 %         fig = figure('Renderer', 'painters', 'Position', [10 10 960 600],'visible','off');
 % %         figure()
 %         [f,xi] = ksdensity(contfit);
@@ -104,33 +102,49 @@
 %         saveas(fig,sprintf('%s%s_ContDist_%d.png',...
 %                     out_path,expt_name,hours(iii)))
 
-        contamean = nanmean(contavg);
-        contamed = nanmedian(contavg);
-        contastd = nanstd(contavg);
+        contavg = [];
+        for ii = 1:size(contpos,1)
+            temp = fetch(conn, sprintf(['select average from %s ',...
+                'where hours = %d and pos in (%s) ',...
+                'and fitness is not null'],tablename_fit,hours(iii),...
+                sprintf('%d,%d,%d,%d,%d,%d,%d,%d',contpos(ii,:))));
+            if nansum(temp.average) > 0
+                contavg = [contavg, temp.average];
+            end
+        end
         
-        perc25a = prctile(contavg,2.5);
-        perc975a = prctile(contavg,97.5);
-                          
-        fig = figure('Renderer', 'painters', 'Position', [10 10 960 600],'visible','off');
-%         figure()
-        [f,xi] = ksdensity(contavg);
-        plot(xi,f,'LineWidth',3)
-        hold on
-        plot(ones(1,length(yy))*perc25a,yy,'--r',...
-            ones(1,length(yy))*perc975a,yy,'--r',...
-            ones(1,length(yy))*contamed,yy,'--r','LineWidth',1)
-%         xlim([0.9,1.15])
-        ylim([0,0.02])
-        hold off
-        grid on
-        grid minor
-        xlabel('Pixel Count')
-        ylabel('Density')
-        title(sprintf(['%s | Control Distribution (Pixel Count) | Time = %d hrs\n',...
-            'Perc 2.5 = %0.4f | Mean = %0.4f | Perc 50 = %0.4f | Perc 97.5 = %0.4f'],...
-            expt,hours(iii),perc25a,contamean,contamed,perc975a))
-        saveas(fig,sprintf('%s%s_ContDistPix_%d.png',...
-                    out_path,expt_name,hours(iii)))
+        xmin = round(min(min(contavg)) - 50, -1);
+        xmax = round(max(max(contavg)) + 50, -1);
+
+        for i = 1:size(contpos,2)
+            contamean = nanmean(contavg(i,:));
+            contamed = nanmedian(contavg(i,:));
+            contastd = nanstd(contavg(i,:));
+
+            perc25a = prctile(contavg(i,:),2.5);
+            perc975a = prctile(contavg(i,:),97.5);
+
+    %         fig = figure('Renderer', 'painters', 'Position', [10 10 960 600],'visible','off');
+            figure()
+            [f,xi] = ksdensity(contavg(i,:));
+            plot(xi,f,'LineWidth',3)
+            hold on
+            plot(ones(1,length(yy))*perc25a,yy,'--r',...
+                ones(1,length(yy))*perc975a,yy,'--r',...
+                ones(1,length(yy))*contamed,yy,'--r','LineWidth',1)
+            xlim([xmin,xmax])
+            ylim([0,0.02])
+            hold off
+            grid on
+            grid minor
+            xlabel('Pixel Count')
+            ylabel('Density')
+            title(sprintf(['%s | Control Distribution (Pixel Count) | Time = %d hrs\n',...
+                'Perc 2.5 = %0.4f | Mean = %0.4f | Perc 50 = %0.4f | Perc 97.5 = %0.4f'],...
+                expt,hours(iii),perc25a,contamean,contamed,perc975a))
+    %         saveas(fig,sprintf('%s%s_ContDistPix_%d.png',...
+    %                     out_path,expt_name,hours(iii)))
+        end
     end
     
 %%  END
