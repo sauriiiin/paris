@@ -48,6 +48,8 @@
     hours = fetch(conn, sprintf(['select distinct hours from %s ',...
                  'order by hours asc'], tablename_fit));
     hours = hours.hours;
+    
+    splt = {'1TL','1TR','1BL','1BR','2TL','2TR','2BL','2BR'};
 
 %%  CREATING DISTRIBUTION PLOTS
 
@@ -95,25 +97,26 @@
 %         xlabel('Fitness')
 %         ylabel('Density')
 %         title(sprintf(['%s | Control Distribution (Fitness) | Time = %d hrs\n',...
-%             'Perc 2.5 = %0.1f | Mean = %0.1f | Median = %0.1f | Perc 97.5 = %0.1f'],...
+%             'Perc 2.5 = %0.2f | Mean = %0.2f | Median = %0.2f | Perc 97.5 = %0.2f'],...
 %             expt,hours(iii),perc25f,contfmean,contfmed,perc975f))
 %         saveas(fig,sprintf('%s%s_ContDist_%d.png',...
 %                     out_path,expt_name,hours(iii)))
 
         contavg = [];
         for ii = 1:size(contpos,1)
-            temp = fetch(conn, sprintf(['select average from %s ',...
+            temp = fetch(conn, sprintf(['select average, fitness from %s ',...
                 'where hours = %d and pos in (%s) ',...
                 'and fitness is not null'],tablename_fit,hours(iii),...
                 sprintf('%d,%d,%d,%d,%d,%d,%d,%d',contpos(ii,:))));
             if nansum(temp.average) > 0
-                contavg = [contavg, temp.average];
+                contavg = [contavg, temp.fitness];
             end
         end
         
-        xmin = round(min(min(contavg)) - 50, -1);
-        xmax = round(max(max(contavg)) + 50, -1);
-        splt = {'TL1','TR1','BL1','BR1','TL2','TR2','BL2','BR2'};
+%         xmin = round(min(min(contavg)) - 50, -1);
+%         xmax = round(max(max(contavg)) + 50, -1);
+        xmin = round(min(min(contavg)),3);
+        xmax = round(max(max(contavg)),3);
         for i = 1:size(contpos,2)
             contamean = nanmean(contavg(i,:));
             contamed = nanmedian(contavg(i,:));
@@ -130,17 +133,18 @@
                 ones(1,length(yy))*perc975a,yy,'--r',...
                 ones(1,length(yy))*contamed,yy,'--r','LineWidth',1)
             xlim([xmin,xmax])
-            ylim([0,0.02])
+%             ylim([0,0.02])
+            ylim([0,15])
             hold off
             grid on
             grid minor
-            xlabel('Pixel Count')
+            xlabel('Fitness')
             ylabel('Density')
-            title(sprintf(['%s | Control Distribution (Pixel Count) - %s | Time = %d hrs\n',...
-                'Perc 2.5 = %0.1f | Mean = %0.1f | Median = %0.1f | Perc 97.5 = %0.1f'],...
+            title(sprintf(['%s | Control Distribution (Fitness) - %s | Time = %d hrs\n',...
+                'Perc 2.5 = %0.2f | Mean = %0.2f | Median = %0.2f | Perc 97.5 = %0.2f'],...
                 expt,splt{i},hours(iii),...
                 perc25a,contamean,contamed,perc975a))
-            saveas(fig,sprintf('%s%s_ContDistPix_%s_%d.png',...
+            saveas(fig,sprintf('%s%s_ContDistFit_%d_%s.png',...
                         out_path,expt_name,hours(iii),splt{i}))
         end
     end
