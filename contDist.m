@@ -49,8 +49,9 @@
                  'order by hours asc'], tablename_fit));
     hours = hours.hours;
     
-    splt = {'1TL','1TR','1BL','1BR','2TL','2TR','2BL','2BR'};
-
+%     splt = {'1TL','1TR','1BL','1BR','2TL','2TR','2BL','2BR'};
+    splt = {'TL','TR','BL','BR'};
+    
 %%  CREATING DISTRIBUTION PLOTS
 
     contpos = fetch(conn, sprintf(['select pos from %s ',...
@@ -63,89 +64,159 @@
     yy = 0:0.1:25;
 
     for iii = 7:length(hours)
-%         contfit = [];
-%         for ii = 1:length(contpos)
-%             temp = fetch(conn, sprintf(['select fitness from %s ',...
-%                 'where hours = %d and pos in (%s) ',...
-%                 'and fitness is not null'],tablename_fit,hours(iii),...
-%                 sprintf('%d,%d,%d,%d,%d,%d,%d,%d',contpos(ii,:))));
-%             if nansum(temp.fitness) > 0
-%                 contfit = [contfit, nanmean(temp.fitness)];
-%             end
-%         end
-% 
-%         contfmean = nanmean(contfit);
-%         contfmed = nanmedian(contfit);
-%         contfstd = nanstd(contfit);
-%         
-%         perc25f = prctile(contfit,2.5);
-%         perc975f = prctile(contfit,97.5);
-% 
-%         fig = figure('Renderer', 'painters', 'Position', [10 10 960 600],'visible','off');
-% %         figure()
-%         [f,xi] = ksdensity(contfit);
-%         plot(xi,f,'LineWidth',3)
-%         hold on
-%         plot(ones(1,length(yy))*perc25f,yy,'--r',...
-%             ones(1,length(yy))*perc975f,yy,'--r',...
-%             ones(1,length(yy))*contfmed,yy,'--r','LineWidth',1)
-%         xlim([0.9,1.15])
-%         ylim([0,25])
-%         hold off
-%         grid on
-%         grid minor
-%         xlabel('Fitness')
-%         ylabel('Density')
-%         title(sprintf(['%s | Control Distribution (Fitness) | Time = %d hrs\n',...
-%             'Perc 2.5 = %0.2f | Mean = %0.2f | Median = %0.2f | Perc 97.5 = %0.2f'],...
-%             expt,hours(iii),perc25f,contfmean,contfmed,perc975f))
-%         saveas(fig,sprintf('%s%s_ContDist_%d.png',...
-%                     out_path,expt_name,hours(iii)))
-
         contavg = [];
+        contfit = [];
         for ii = 1:size(contpos,1)
             temp = fetch(conn, sprintf(['select average, fitness from %s ',...
                 'where hours = %d and pos in (%s) ',...
                 'and fitness is not null'],tablename_fit,hours(iii),...
                 sprintf('%d,%d,%d,%d,%d,%d,%d,%d',contpos(ii,:))));
             if nansum(temp.average) > 0
-                contavg = [contavg, temp.fitness];
+                contavg = [contavg, temp.average];
+                contfit = [contfit, temp.fitness];
             end
         end
         
-%         xmin = round(min(min(contavg)) - 50, -1);
-%         xmax = round(max(max(contavg)) + 50, -1);
-        xmin = round(min(min(contavg)),3);
-        xmax = round(max(max(contavg)),3);
         for i = 1:size(contpos,2)
-            contamean = nanmean(contavg(i,:));
-            contamed = nanmedian(contavg(i,:));
-            contastd = nanstd(contavg(i,:));
-            perc25a = prctile(contavg(i,:),2.5);
-            perc975a = prctile(contavg(i,:),97.5);
-
-            fig = figure('Renderer', 'painters', 'Position', [10 10 960 600],'visible','off');
+            contamean{i} = nanmean(contavg(i,:));      contfmean{i} = nanmean(contfit(i,:));
+            contamed{i} = nanmedian(contavg(i,:));     contfmed{i} = nanmedian(contfit(i,:));
+            contastd{i} = nanstd(contavg(i,:));        contfstd{i} = nanstd(contfit(i,:));
+            perc25a{i} = prctile(contavg(i,:),2.5);    perc25f{i} = prctile(contfit(i,:),2.5);
+            perc975a{i} = prctile(contavg(i,:),97.5);  perc975f{i} = prctile(contfit(i,:),97.5);
+            [fa{i},xia{i}] = ksdensity(contavg(i,:));
+            [ff{i},xif{i}] = ksdensity(contfit(i,:));
+        end
+        
+        xmina = round(min(min(contavg))-50,-1);
+        xmaxa = round(max(max(contavg))+50,-1);
+        xminf = round(min(min(contfit)),3);
+        xmaxf = round(max(max(contfit)),3);
+        
+        for p = 1:2
+            fig = figure('Renderer', 'painters', 'Position', [10 10 1500 2000],'visible','off');
 %             figure()
-            [f,xi] = ksdensity(contavg(i,:));
-            plot(xi,f,'LineWidth',3)
+            subplot(4,2,1)
+            plot(xia{p-1+1},fa{p-1+1},'LineWidth',3)
             hold on
-            plot(ones(1,length(yy))*perc25a,yy,'--r',...
-                ones(1,length(yy))*perc975a,yy,'--r',...
-                ones(1,length(yy))*contamed,yy,'--r','LineWidth',1)
-            xlim([xmin,xmax])
-%             ylim([0,0.02])
+            plot(ones(1,length(yy))*perc25a{p-1+1},yy,'--r',...
+                ones(1,length(yy))*perc975a{p-1+1},yy,'--r',...
+                ones(1,length(yy))*contamed{p-1+1},yy,'--r','LineWidth',1)
+            xlim([xmina,xmaxa])
+            ylim([0,0.02])
+            hold off
+            grid on
+            grid minor
+            ylabel(sprintf('%s\nDensity',splt{1}))
+            title(sprintf('Perc 2.5 = %0.2f | Mean = %0.2f | Median = %0.2f | Perc 97.5 = %0.2f',...
+                perc25a{p-1+1},contamean{p-1+1},contamed{p-1+1},perc975a{p-1+1}))
+
+            subplot(4,2,2)
+            plot(xif{p-1+1},ff{p-1+1},'LineWidth',3)
+            hold on
+            plot(ones(1,length(yy))*perc25f{p-1+1},yy,'--r',...
+                ones(1,length(yy))*perc975f{p-1+1},yy,'--r',...
+                ones(1,length(yy))*contfmed{p-1+1},yy,'--r','LineWidth',1)
+            xlim([xminf,xmaxf])
+            ylim([0,15])
+            hold off
+            grid on
+            grid minor
+            title(sprintf('Perc 2.5 = %0.2f | Mean = %0.2f | Median = %0.2f | Perc 97.5 = %0.2f',...
+                perc25f{p-1+1},contfmean{p-1+1},contfmed{p-1+1},perc975f{p-1+1}))
+            
+            subplot(4,2,3)
+            plot(xia{p-1+2},fa{p-1+2},'LineWidth',3)
+            hold on
+            plot(ones(1,length(yy))*perc25a{p-1+2},yy,'--r',...
+                ones(1,length(yy))*perc975a{p-1+2},yy,'--r',...
+                ones(1,length(yy))*contamed{p-1+2},yy,'--r','LineWidth',1)
+            xlim([xmina,xmaxa])
+            ylim([0,0.02])
+            hold off
+            grid on
+            grid minor
+            ylabel(sprintf('%s\nDensity',splt{2}))
+            title(sprintf('Perc 2.5 = %0.2f | Mean = %0.2f | Median = %0.2f | Perc 97.5 = %0.2f',...
+                perc25a{p-1+2},contamean{p-1+2},contamed{p-1+2},perc975a{p-1+2}))
+
+            subplot(4,2,4)
+            plot(xif{p-1+2},ff{p-1+2},'LineWidth',3)
+            hold on
+            plot(ones(1,length(yy))*perc25f{p-1+2},yy,'--r',...
+                ones(1,length(yy))*perc975f{p-1+2},yy,'--r',...
+                ones(1,length(yy))*contfmed{p-1+2},yy,'--r','LineWidth',1)
+            xlim([xminf,xmaxf])
+            ylim([0,15])
+            hold off
+            grid on
+            grid minor
+            title(sprintf('Perc 2.5 = %0.2f | Mean = %0.2f | Median = %0.2f | Perc 97.5 = %0.2f',...
+                perc25f{p-1+2},contfmean{p-1+2},contfmed{p-1+2},perc975f{p-1+2}))
+            
+            subplot(4,2,5)
+            plot(xia{p-1+3},fa{p-1+3},'LineWidth',3)
+            hold on
+            plot(ones(1,length(yy))*perc25a{p-1+3},yy,'--r',...
+                ones(1,length(yy))*perc975a{p-1+3},yy,'--r',...
+                ones(1,length(yy))*contamed{p-1+3},yy,'--r','LineWidth',1)
+            xlim([xmina,xmaxa])
+            ylim([0,0.02])
+            hold off
+            grid on
+            grid minor
+            ylabel(sprintf('%s\nDensity',splt{3}))
+            title(sprintf('Perc 2.5 = %0.2f | Mean = %0.2f | Median = %0.2f | Perc 97.5 = %0.2f',...
+                perc25a{p-1+3},contamean{p-1+3},contamed{p-1+3},perc975a{p-1+3}))
+
+            subplot(4,2,6)
+            plot(xif{p-1+3},ff{p-1+3},'LineWidth',3)
+            hold on
+            plot(ones(1,length(yy))*perc25f{p-1+3},yy,'--r',...
+                ones(1,length(yy))*perc975f{p-1+3},yy,'--r',...
+                ones(1,length(yy))*contfmed{p-1+3},yy,'--r','LineWidth',1)
+            xlim([xminf,xmaxf])
+            ylim([0,15])
+            hold off
+            grid on
+            grid minor
+            title(sprintf('Perc 2.5 = %0.2f | Mean = %0.2f | Median = %0.2f | Perc 97.5 = %0.2f',...
+                perc25f{p-1+3},contfmean{p-1+3},contfmed{p-1+3},perc975f{p-1+3}))
+            
+            subplot(4,2,7)
+            plot(xia{p-1+4},fa{p-1+4},'LineWidth',3)
+            hold on
+            plot(ones(1,length(yy))*perc25a{p-1+4},yy,'--r',...
+                ones(1,length(yy))*perc975a{p-1+4},yy,'--r',...
+                ones(1,length(yy))*contamed{p-1+4},yy,'--r','LineWidth',1)
+            xlim([xmina,xmaxa])
+            ylim([0,0.02])
+            hold off
+            grid on
+            grid minor
+            ylabel(sprintf('%s\nDensity',splt{4}))
+            xlabel('Pixel Count')
+            title(sprintf('Perc 2.5 = %0.2f | Mean = %0.2f | Median = %0.2f | Perc 97.5 = %0.2f',...
+                perc25a{p-1+4},contamean{p-1+4},contamed{p-1+4},perc975a{p-1+4}))
+
+            subplot(4,2,8)
+            plot(xif{p-1+4},ff{p-1+4},'LineWidth',3)
+            hold on
+            plot(ones(1,length(yy))*perc25f{p-1+4},yy,'--r',...
+                ones(1,length(yy))*perc975f{p-1+4},yy,'--r',...
+                ones(1,length(yy))*contfmed{p-1+4},yy,'--r','LineWidth',1)
+            xlim([xminf,xmaxf])
             ylim([0,15])
             hold off
             grid on
             grid minor
             xlabel('Fitness')
-            ylabel('Density')
-            title(sprintf(['%s | Control Distribution (Fitness) - %s | Time = %d hrs\n',...
-                'Perc 2.5 = %0.2f | Mean = %0.2f | Median = %0.2f | Perc 97.5 = %0.2f'],...
-                expt,splt{i},hours(iii),...
-                perc25a,contamean,contamed,perc975a))
-            saveas(fig,sprintf('%s%s_ContDistFit_%d_%s.png',...
-                        out_path,expt_name,hours(iii),splt{i}))
+            title(sprintf('Perc 2.5 = %0.2f | Mean = %0.2f | Median = %0.2f | Perc 97.5 = %0.2f',...
+                perc25f{p-1+4},contfmean{p-1+4},contfmed{p-1+4},perc975f{p-1+4}))
+            sgtitle(sprintf('%s | Control Distribution | Time = %d hrs\nPlate - %d',...
+                expt,hours(iii),p))
+            
+            saveas(fig,sprintf('%s%s_ContDist_%d_P%d.png',...
+                        out_path,expt_name,hours(iii),p))
         end
     end
     
