@@ -207,6 +207,9 @@
                         sprintf('%d,%d,%d,%d,%d,%d,%d,%d',contpos(ii,:))));
                     if isstruct(temp) ~= 0
                         if nansum(temp.fitness) > 0
+%                             contfit = [contfit, nanmean(temp.fitness)];
+                            [~,outlier] = rmoutliers(temp.fitness);
+                            temp.fitness(outlier) = NaN;
                             contfit = [contfit, nanmean(temp.fitness)];
                         end
                     end
@@ -272,80 +275,80 @@
                 cdata = [cdata; ef_size, pow, abs(1-ef_size), 100-pow];
                 data = [data; ef_size, pow, abs(1-ef_size), 100-pow];
                 
-%                 figure()
-                fig = figure('Renderer', 'painters', 'Position', [10 10 480 300],'visible','off');
-                [f,xi] = ksdensity(cont_fit);
-                plot(xi,f,'LineWidth',3)
-                xlim([0.75,1.25])
-%                 ylim([0,30])
-                hold on
-                [f,xi] = ksdensity(rest_fit);
-                plot(xi,f,'LineWidth',3)
-                legend('control','rest of plate')
-                title(sprintf(['%s\n',...
-                    'Time = (%d, %d) hrs | ES = %0.3f | Power = %0.3f'],...
-                    expt,cont_hrs,rest_hrs(iii),ef_size,pow))
-                xlabel('Fitness')
-                ylabel('Density')
-                grid on
-                grid minor
-                hold off
-                saveas(fig,sprintf('%s%s_ContRest_%d%d.png',...
-                    out_path,expt_name,cont_hrs,rest_hrs(iii)))
+% %                 figure()
+%                 fig = figure('Renderer', 'painters', 'Position', [10 10 480 300],'visible','off');
+%                 [f,xi] = ksdensity(cont_fit);
+%                 plot(xi,f,'LineWidth',3)
+%                 xlim([0.75,1.25])
+% %                 ylim([0,30])
+%                 hold on
+%                 [f,xi] = ksdensity(rest_fit);
+%                 plot(xi,f,'LineWidth',3)
+%                 legend('control','rest of plate')
+%                 title(sprintf(['%s\n',...
+%                     'Time = (%d, %d) hrs | ES = %0.3f | Power = %0.3f'],...
+%                     expt,cont_hrs,rest_hrs(iii),ef_size,pow))
+%                 xlabel('Fitness')
+%                 ylabel('Density')
+%                 grid on
+%                 grid minor
+%                 hold off
+%                 saveas(fig,sprintf('%s%s_ContRest_%d%d.png',...
+%                     out_path,expt_name,cont_hrs,rest_hrs(iii)))
             end
 
         %%  POWER vs ES
 
-%             [~, i] = sort(data(:,1));
-%             es_pow = data(i, :);
-% 
-%             x   = es_pow(:,1);
-%             y   = es_pow(:,2);
-%             xx  = min(es_pow(:,1)):.001:max(es_pow(:,1));
-%             yy  = interp1(x,y,...
-%                 xx,'pchip');
-% 
-%     %         figure()
-%             fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
-%             plot(xx,yy,'Color',[0.5 0.75 1],'LineWidth',2)
-%             grid on
-%             grid minor
-%             xlim([0.6,1.4])
-%             ylim([-1,101])
-%             xlabel('Effect Size (Relative Fitness)')
-%             ylabel('Power')
-%             hold on
-%             scatter(x, y,'MarkerEdgeColor',[0 .5 .5],...
-%                       'MarkerFaceColor',[0 .7 .7],...
-%                       'LineWidth',2);
-%             hold on
-%             title(sprintf('ES V/S Power\nTime = %dhrs | SS = %d | FPR = %.2f%%',cont_hrs, ss, fpr))
-%             hold off
-%             saveas(fig,sprintf('%s%s_TpowES_%d_%d.png',...
-%                 out_path,expt_name,cont_hrs,ss))
+            [~, i] = sort(data(:,1));
+            es_pow = data(i, :);
+
+            x   = es_pow(:,1);
+            y   = es_pow(:,2);
+            xx  = min(es_pow(:,1)):.001:max(es_pow(:,1));
+            yy  = interp1(x,y,...
+                xx,'pchip');
+
+    %         figure()
+            fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
+            plot(xx,yy,'Color',[0.5 0.75 1],'LineWidth',2)
+            grid on
+            grid minor
+            xlim([0.6,1.4])
+            ylim([-1,101])
+            xlabel('Effect Size (Relative Fitness)')
+            ylabel('Power')
+            hold on
+            scatter(x, y,'MarkerEdgeColor',[0 .5 .5],...
+                      'MarkerFaceColor',[0 .7 .7],...
+                      'LineWidth',2);
+            hold on
+            title(sprintf('ES V/S Power\nTime = %dhrs | SS = %d | FPR = %.2f%%',cont_hrs, ss, fpr))
+            hold off
+            saveas(fig,sprintf('%s%s_TpowES_%d_%d.png',...
+                out_path,expt_name,cont_hrs,ss))
             
-%             
-%             [~, i] = sort(data(:,3));
-%             es_fn = data(i, :);
-%             x   = log10(es_fn(:,3));
-%             y   = es_fn(:,4);
-% 
-%     %         figure()
-%             fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
-%             grid on
-%             grid minor
-%             ylim([-1,101])
-%             xlabel('Log10(Effect Size)')
-%             ylabel('False Negative Rate')
-%             hold on
-%             scatter(x, y,'MarkerEdgeColor',[0 .5 .5],...
-%                       'MarkerFaceColor',[0 .7 .7],...
-%                       'LineWidth',2);
-%             hold on
-%             title(sprintf('ES V/S FN\nTime = %dhrs | SS = %d | FPR = %.2f%%',cont_hrs, ss, fpr))
-%             hold off
-%             saveas(fig,sprintf('%s%s_TFNES_%d_%d.png',...
-%                 out_path,expt_name,cont_hrs,ss))
+            
+            [~, i] = sort(data(:,3));
+            es_fn = data(i, :);
+            x   = log10(es_fn(:,3));
+            y   = es_fn(:,4);
+
+    %         figure()
+            fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
+            grid on
+            grid minor
+            ylim([-1,101])
+            xlabel('Log10(Effect Size)')
+            ylabel('False Negative Rate')
+            hold on
+            scatter(x, y,'MarkerEdgeColor',[0 .5 .5],...
+                      'MarkerFaceColor',[0 .7 .7],...
+                      'LineWidth',2);
+            hold on
+            title(sprintf('ES V/S FN\nTime = %dhrs | SS = %d | FPR = %.2f%%',cont_hrs, ss, fpr))
+            hold off
+            saveas(fig,sprintf('%s%s_TFNES_%d_%d.png',...
+                out_path,expt_name,cont_hrs,ss))
                     
             fprintf('techPowA for %s at %d hrs is done.\n',...
                 expt_name,cont_hrs)
@@ -355,56 +358,56 @@
         end
 %%  COMPOSITE ES AND POW RELATIONSHIP
             
-%         [~, i] = sort(cdata(:,1));
-%         es_pow = cdata(i, :);
-% 
-%         x   = es_pow(:,1);
-%         y   = es_pow(:,2);
-%         xx  = min(es_pow(:,1)):.001:max(es_pow(:,1));
-%         yy  = interp1(x,y,xx,'pchip');
-% 
-% %         figure()
-%         fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
-%         plot(xx,yy,'Color',[0.5 0.75 1],'LineWidth',2)
-%         grid on
-%         grid minor
-%         xlim([0.6,1.4])
-%         ylim([-1,101])
-%         xlabel('Effect Size (Relative Fitness)')
-%         ylabel('Power')
-%         hold on
-%         scatter(x, y,'MarkerEdgeColor',[0 .5 .5],...
-%                   'MarkerFaceColor',[0 .7 .7],...
-%                   'LineWidth',2);
-%         hold on
-%         title(sprintf('%s\nES V/S Power',expt))
-%         hold off
-%         saveas(fig,sprintf('%s%s_TpowES_%d.png',out_path,expt_name,ss))
+        [~, i] = sort(cdata(:,1));
+        es_pow = cdata(i, :);
+
+        x   = es_pow(:,1);
+        y   = es_pow(:,2);
+        xx  = min(es_pow(:,1)):.001:max(es_pow(:,1));
+        yy  = interp1(x,y,xx,'pchip');
+
+%         figure()
+        fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
+        plot(xx,yy,'Color',[0.5 0.75 1],'LineWidth',2)
+        grid on
+        grid minor
+        xlim([0.6,1.4])
+        ylim([-1,101])
+        xlabel('Effect Size (Relative Fitness)')
+        ylabel('Power')
+        hold on
+        scatter(x, y,'MarkerEdgeColor',[0 .5 .5],...
+                  'MarkerFaceColor',[0 .7 .7],...
+                  'LineWidth',2);
+        hold on
+        title(sprintf('%s\nES V/S Power',expt))
+        hold off
+        saveas(fig,sprintf('%s%s_TpowES_%d.png',out_path,expt_name,ss))
         
         
-%         [~, i] = sort(cdata(:,3));
-%         es_fn = cdata(i, :);
-%         x   = log10(es_fn(:,3));
-%         y   = es_fn(:,4);
-%         yy = smooth(x,smooth(x,y,'moving'));
-%         
-% %         figure()
-%         fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
-%         plot(x,yy,'r--','LineWidth',3)
-%         grid on
-%         grid minor
-%         ylim([-1,101])
-%         xlabel('Log10(| 1- Effect Size |)')
-%         ylabel('False Negative Rate')
-%         hold on
-%         scatter(x, y,'MarkerEdgeColor',[0 .5 .5],...
-%                   'MarkerFaceColor',[0 .7 .7],...
-%                   'LineWidth',2);
-%         legend('fitted curve','real data')
-%         hold on
-%         title(sprintf('ES V/S FN\n%s',expt))
-%         hold off
-%         saveas(fig,sprintf('%s%s_TFNES_%d.png',out_path,expt_name,ss))
+        [~, i] = sort(cdata(:,3));
+        es_fn = cdata(i, :);
+        x   = log10(es_fn(:,3));
+        y   = es_fn(:,4);
+        yy = smooth(x,smooth(x,y,'moving'));
+        
+%         figure()
+        fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
+        plot(x,yy,'r--','LineWidth',3)
+        grid on
+        grid minor
+        ylim([-1,101])
+        xlabel('Log10(| 1- Effect Size |)')
+        ylabel('False Negative Rate')
+        hold on
+        scatter(x, y,'MarkerEdgeColor',[0 .5 .5],...
+                  'MarkerFaceColor',[0 .7 .7],...
+                  'LineWidth',2);
+        legend('fitted curve','real data')
+        hold on
+        title(sprintf('ES V/S FN\n%s',expt))
+        hold off
+        saveas(fig,sprintf('%s%s_TFNES_%d.png',out_path,expt_name,ss))
 
         fprintf("TechRep Based Power V/S Effect Size Analysis For %s Complete!\n",expt_name);
         send_message(4124992194,'fi','techPowA Complete',...
