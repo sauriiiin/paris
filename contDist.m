@@ -404,22 +404,5 @@
     
 %%  POSITIONS OF LARGE CONTROLS
 %   check contdist.R on paris
-
-%%  OVERALL CONTROL DISTRIBUTION
-    
-    hello = nanmean(contfit,1);
-    [f,xi] = ksdensity(hello);
-    
-    figure()
-    plot(xi,f,'LineWidth',3)
-    hold on
-    plot(ones(1,length(yy))*prctile(hello,2.5),yy,'--r',...
-        ones(1,length(yy))*prctile(hello,97.5),yy,'--r',...
-        ones(1,length(yy))*nanmedian(hello),yy,'--r','LineWidth',1)
-    hold off
-    grid on
-    grid minor
-
-    
-    
+ 
 %%  END
