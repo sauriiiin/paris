@@ -76,12 +76,13 @@
         tablename_p2o,cont.name,tablename_bpos));
     contpos = contpos.pos + [110000,120000,130000,140000,...
         210000,220000,230000,240000];
-    yy = 0:0.1:25;
+    yy = 0:0.1:30;
 
     for iii = 7:length(hours)
         contavg = [];
         contfit = [];
         contbg = [];
+        conterr = [];
         for ii = 1:size(contpos,1)
             temp = fetch(conn, sprintf(['select * from %s ',...
                 'where hours = %d and pos in (%s) ',...
@@ -90,6 +91,10 @@
             if nansum(temp.average) > 0
                 contavg = [contavg, temp.average];
                 contbg = [contbg, temp.bg];
+                err = temp.average - temp.bg;
+                [~,outlier] = rmoutliers(err);
+                err(outlier) = NaN;
+                conterr = [conterr, err];
 %                 contfit = [contfit, temp.fitness];
                 [~,outlier] = rmoutliers(temp.fitness);
                 temp.fitness(outlier) = NaN;
@@ -105,8 +110,9 @@
             perc975a{i} = prctile(contavg(i,:),97.5);  perc975f{i} = prctile(contfit(i,:),97.5);
             [fa{i},xia{i}] = ksdensity(contavg(i,:));
             [ff{i},xif{i}] = ksdensity(contfit(i,:));
-            conterr{i} = contavg(i,:) - contbg(i,:);   conterr{i} = conterr{i}(~isnan(conterr{i}));
-            u{i} = conterr{i}(conterr{i} > 0)';         d{i} = conterr{i}(conterr{i} < 0)';
+%             conterr{i} = contavg(i,:) - contbg(i,:);   conterr{i} = conterr{i}(~isnan(conterr{i}));
+%             u{i} = conterr{i}(conterr{i} > 0)';         d{i} = conterr{i}(conterr{i} < 0)';
+            u{i} = conterr(i,conterr(i,:) > 0)';        d{i} = conterr(i,conterr(i,:) < 0)';
             xu{i} = [1:length(u{i}), fliplr(1:length(u{i}))];
             inBetweenU{i} = [sort(u{i})', fliplr(zeros(1,length(u{i})))];
             xd{i} = [1:length(d{i}), fliplr(1:length(d{i}))];
@@ -115,8 +121,10 @@
         
         xmina = round(min(min(contavg))-50,-1);
         xmaxa = round(max(max(contavg))+50,-1);
-        xminf = round(min(min(contfit)),3);
-        xmaxf = round(max(max(contfit)),3);
+%         xminf = round(min(min(contfit)),3);
+%         xmaxf = round(max(max(contfit)),3);
+        xminf = 0.7;
+        xmaxf = 1.4;
 
         fig = figure('Renderer','painters',...
                 'Position',[10 10 1300 500],...
@@ -132,8 +140,8 @@
             ones(1,length(yy))*nanmedian(hello),yy,'--r','LineWidth',1)
         ylabel('Density')
         xlabel('Fitness')
-        xlim([0.8,1.2])
-        ylim([0,25])
+        xlim([0.85,1.15])
+        ylim([0,28])
         hold off
         grid on
         grid minor
@@ -150,8 +158,8 @@
             ones(1,length(yy))*nanmedian(hello),yy,'--r','LineWidth',1)
         ylabel('Density')
         xlabel('Fitness')
-        xlim([0.8,1.2])
-        ylim([0,25])
+        xlim([0.85,1.15])
+        ylim([0,28])
         hold off
         grid on
         grid minor

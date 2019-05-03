@@ -413,29 +413,29 @@
         saveas(fig,sprintf('%s%s_TpowES_%d.png',out_path,expt_name,ss))
         
         
-%         [~, i] = sort(cdata(:,3));
-%         es_fn = cdata(i, :);
-%         x   = log10(es_fn(:,3));
-%         y   = es_fn(:,4);
-%         yy = smooth(x,smooth(x,y,'moving'));
-%         
-% %         figure()
-%         fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
-%         plot(x,yy,'r--','LineWidth',3)
-%         grid on
-%         grid minor
-%         ylim([-1,101])
-%         xlabel('Log10(| 1- Effect Size |)')
-%         ylabel('False Negative Rate')
-%         hold on
-%         scatter(x, y,'MarkerEdgeColor',[0 .5 .5],...
-%                   'MarkerFaceColor',[0 .7 .7],...
-%                   'LineWidth',2);
-%         legend('fitted curve','real data')
-%         hold on
-%         title(sprintf('ES V/S FN\n%s',expt))
-%         hold off
-%         saveas(fig,sprintf('%s%s_TFNES_%d.png',out_path,expt_name,ss))
+        [~, i] = sort(cdata(:,3));
+        es_fn = cdata(i, :);
+        x   = log10(es_fn(:,3));
+        y   = es_fn(:,4);
+        yy = smooth(x,smooth(x,y,'moving'));
+        
+%         figure()
+        fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
+        plot(x,yy,'r--','LineWidth',3)
+        grid on
+        grid minor
+        ylim([-1,101])
+        xlabel('Log10(| 1- Effect Size |)')
+        ylabel('False Negative Rate')
+        hold on
+        scatter(x, y,'MarkerEdgeColor',[0 .5 .5],...
+                  'MarkerFaceColor',[0 .7 .7],...
+                  'LineWidth',2);
+        legend('fitted curve','real data')
+        hold on
+        title(sprintf('ES V/S FN\n%s',expt))
+        hold off
+        saveas(fig,sprintf('%s%s_TFNES_%d.png',out_path,expt_name,ss))
 
         fprintf("TechRep Based Power V/S Effect Size Analysis For %s Complete!\n",expt_name);
         send_message(4124992194,'fi','techPowA Complete',...
