@@ -293,7 +293,8 @@
                     temp_fits,rest_hrs(iii),cont.name));
 %                 rest_fit = rfit.fitness;
                 rest_fit = rfit.cs_mean;
-                ef_size = mean(rest_fit)/mean(cont_fit);
+%                 ef_size = mean(rest_fit)/mean(cont_fit);
+                ef_size = mean(rest_fit) - (mean(cont_fit) - 1);
                 
                 pp = fetch(conn, sprintf(['select p from %s ',...
                     'where hours = %d '],...
