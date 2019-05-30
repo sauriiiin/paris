@@ -18,7 +18,7 @@
         addpath('/home/sbp29/MATLAB/paris')
         addpath('/home/sbp29/MATLAB/development')
 
-        javaaddpath('/home/sbp29/MATLAB/mysql-connector-java-8.0.15.jar');
+        javaaddpath('/home/sbp29/MATLAB/mysql-connector-java-8.0.16.jar');
 
     %%  Initialization
 
@@ -27,9 +27,9 @@
         setdbprefs({'NullStringRead';'NullStringWrite';'NullNumberRead';'NullNumberWrite'},...
                       {'null';'null';'NaN';'NaN'})
 
-        expt_name = '4C3_GA1';
-        expt = 'FS1-1';
-        out_path = '/home/sbp29/MATLAB/4C3_Data/GA/S1Analysis/power/rmoutlier/';
+        expt_name = '4C3_GA1_NONORM';
+        expt = 'FS1-1-NN';
+        out_path = '/home/sbp29/MATLAB/4C3_Data/GA/S1Analysis/power/';
 %         out_path = '/Users/saur1n/Desktop/4C3/Analysis/GA/S1Analysis/fnfp/';
         density = 6144;
 
@@ -78,7 +78,7 @@
         
         cdata = [];
 
-        for t = 7:length(hours)
+        for t = 1:length(hours)
 %%  GENERATE FITNESS DATA
 
             exec(conn, sprintf('drop table %s',temp_norm));
@@ -99,7 +99,7 @@
                 'where hours = %d and p < 0.05'],tablename_pval,cont_hrs));
             orfs = fetch(conn, sprintf(['select count(*) from %s ',...
                 'where hours = %d'],tablename_pval,cont_hrs));
-            fpr = (fpr.count___/orfs.count___)*100;
+            fpr = (fpr.count____1/orfs.count____1)*100;
             
             data = [];
             fdata = [];
@@ -107,14 +107,14 @@
                 plate_fit = [];
                 cont_fit = [];
                 rest_fit = [];
-                for iii = 1:length(n_plates.x6144plate)
+                for iii = 1:length(n_plates.x6144plate_1)
                     pos.all = fetch(conn, sprintf(['select a.pos ',...
                         'from %s a ',...
                         'where %s = %d ',...
                         'order by %s, %s'],...
                         p2c_info(1,:),...
                         p2c_info(2,:),...
-                        n_plates.x6144plate(iii),...
+                        n_plates.x6144plate_1(iii),...
                         p2c_info(3,:),...
                         p2c_info(4,:)));
 
@@ -125,7 +125,7 @@
                         tablename_p2o,...
                         p2c_info(1,:),...
                         p2c_info(2,:),...
-                        n_plates.x6144plate(iii),...
+                        n_plates.x6144plate_1(iii),...
                         cont.name,...
                         p2c_info(3,:),...
                         p2c_info(4,:)));
@@ -139,7 +139,7 @@
                         'and a.pos = b.pos and b.%s = %d ',...
                         'order by b.%s, b.%s'],...
                         tablename_fit,p2c_info(1,:),cont_hrs,...
-                        p2c_info(2,:),n_plates.x6144plate(iii),...
+                        p2c_info(2,:),n_plates.x6144plate_1(iii),...
                         p2c_info(3,:),p2c_info(4,:)));
 
                     cont_avg = col2grid(cont_data.average).*cont_pos;
@@ -151,7 +151,7 @@
                         'and a.pos = b.pos and b.%s = %d ',...
                         'order by b.%s, b.%s'],...
                         tablename_fit,p2c_info(1,:),rest_hrs(ii),...
-                        p2c_info(2,:),n_plates.x6144plate(iii),...
+                        p2c_info(2,:),n_plates.x6144plate_1(iii),...
                         p2c_info(3,:),p2c_info(4,:)));
 
                     rest_avg = col2grid(rest_data.average).*rest_pos;
@@ -172,7 +172,10 @@
                 'from %s a, %s b ',...
                 'where a.pos = b.pos ',...
                 'order by a.pos asc)'],temp_fit,temp_norm,tablename_p2o));
-%%  FITNESS STATS            
+%%  FITNESS STATS
+            exec(conn, sprintf(['update %s ',...
+                'set fitness = average'], temp_fit)); %for no normalization results
+            
             exec(conn, sprintf('drop table %s', temp_fits));
             exec(conn, sprintf(['create table %s (orf_name varchar(255) null, ',...
                 'hours int not null, N int not null, cs_mean double null, ',...
@@ -203,14 +206,14 @@
                     'where hours = %d and pos in (%s) ',...
                     'and fitness is not null'],temp_fit,cont_hrs,...
                     sprintf('%d,%d,%d,%d,%d,%d,%d,%d',contpos(ii,:))));
-                if isstruct(temp) ~= 0
+%                 if isstruct(temp) ~= 0
                     if nansum(temp.fitness) > 0
 %                             contfit = [contfit, nanmean(temp.fitness)];
                         outlier = isoutlier(temp.fitness);
                         temp.fitness(outlier) = NaN;
                         contfit = [contfit, nanmean(temp.fitness)];
                     end
-                end
+%                 end
             end
             contmean = nanmean(contfit);
             contstd = nanstd(contfit);
@@ -293,8 +296,8 @@
                     temp_fits,rest_hrs(iii),cont.name));
 %                 rest_fit = rfit.fitness;
                 rest_fit = rfit.cs_mean;
-%                 ef_size = mean(rest_fit)/mean(cont_fit);
-                ef_size = mean(rest_fit) - (mean(cont_fit) - 1);
+                ef_size = mean(rest_fit)/mean(cont_fit);
+%                 ef_size = mean(rest_fit) - (mean(cont_fit) - 1);
                 
                 pp = fetch(conn, sprintf(['select p from %s ',...
                     'where hours = %d '],...
@@ -338,24 +341,24 @@
                 xx,'makima');
 
     %         figure()
-            fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
-            plot(xx,yy,'Color',[0.5 0.75 1],'LineWidth',1)
-            grid on
-            grid minor
-            xlim([0.6,1.4])
-            ylim([-1,101])
-            xlabel('Effect Size (Relative Fitness)')
-            ylabel('Power')
-            hold on
-            scatter(x, y,'MarkerEdgeColor',[0 .5 .5],...
-                      'MarkerFaceColor',[0 .7 .7],...
-                      'LineWidth',2);
-            hold on
-            title(sprintf('ES V/S Power\nTime = %dhrs | SS = %d | FPR = %.2f%%',cont_hrs, ss, fpr))
-            hold off
-            saveas(fig,sprintf('%s%s_TpowES_%d_%d.png',...
-                out_path,expt_name,cont_hrs,ss))
-            
+%             fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
+%             plot(xx,yy,'Color',[0.5 0.75 1],'LineWidth',1)
+%             grid on
+%             grid minor
+%             xlim([0.6,1.4])
+%             ylim([-1,101])
+%             xlabel('Effect Size (Relative Fitness)')
+%             ylabel('Power')
+%             hold on
+%             scatter(x, y,'MarkerEdgeColor',[0 .5 .5],...
+%                       'MarkerFaceColor',[0 .7 .7],...
+%                       'LineWidth',2);
+%             hold on
+%             title(sprintf('ES V/S Power\nTime = %dhrs | SS = %d | FPR = %.2f%%',cont_hrs, ss, fpr))
+%             hold off
+%             saveas(fig,sprintf('%s%s_TpowES_%d_%d.png',...
+%                 out_path,expt_name,cont_hrs,ss))
+%             
             
 %             [~, i] = sort(data(:,3));
 %             es_fn = data(i, :);
@@ -378,6 +381,33 @@
 %             hold off
 %             saveas(fig,sprintf('%s%s_TFNES_%d_%d.png',...
 %                 out_path,expt_name,cont_hrs,ss))
+
+%%  SAVING ALL DATA
+
+            temp_stat_p = fetch(conn, sprintf(['select a.*, b.p ',...
+                'from %s a, %s b ',...
+                'where a.orf_name = b.orf_name ',...
+                'and a.orf_name != ''BFC100'' ',...
+                'and a.hours = b.hours ',...
+                'order by a.hours, a.orf_name'], temp_fits, temp_pval));
+            writetable(temp_stat_p,...
+                sprintf('%s_%d_STATS_P.csv',expt_name,cont_hrs),...
+                'Delimiter',',',...
+                'QuoteStrings',true)
+
+            temp_fitness = fetch(conn, sprintf(['select a.hours, a.pos, b.6144plate, b.6144col, b.6144row, ',...
+                'a.orf_name, a.bg, a.average, a.fitness ',...
+                'from %s a, %s b ',...
+                'where a.pos = b.pos ',...
+                'order by a.hours, b.%s, b.%s, b.%s'],...
+                temp_fit,p2c_info(1,:),...
+                            p2c_info(2,:),...
+                            p2c_info(3,:),...
+                            p2c_info(4,:)));        
+             writetable(temp_fitness,...
+                sprintf('%s_%d_FITNESS.csv',expt_name,cont_hrs),...
+                'Delimiter',',',...
+                'QuoteStrings',true)
                     
             fprintf('techPowA for %s at %d hrs is done.\n',...
                 expt_name,cont_hrs)
@@ -396,47 +426,49 @@
         yy  = interp1(x,y,xx,'makima');
 
 %         figure()
-        fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
-        plot(xx,yy,'Color',[0.5 0.75 1],'LineWidth',1)
-        grid on
-        grid minor
-        xlim([0.8,1.2])
-        ylim([-1,101])
-        xlabel('Effect Size (Relative Fitness)')
-        ylabel('Power')
-        hold on
-        scatter(x, y,'MarkerEdgeColor',[0 .5 .5],...
-                  'MarkerFaceColor',[0 .7 .7],...
-                  'LineWidth',2);
-        hold on
-        title(sprintf('%s\nES V/S Power',expt))
-        hold off
-        saveas(fig,sprintf('%s%s_TpowES_%d.png',out_path,expt_name,ss))
+%         fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
+%         plot(xx,yy,'Color',[0.5 0.75 1],'LineWidth',1)
+%         grid on
+%         grid minor
+%         xlim([0.8,1.2])
+%         ylim([-1,101])
+%         xlabel('Effect Size (Relative Fitness)')
+%         ylabel('Power')
+%         hold on
+%         scatter(x, y,'MarkerEdgeColor',[0 .5 .5],...
+%                   'MarkerFaceColor',[0 .7 .7],...
+%                   'LineWidth',2);
+%         hold on
+%         title(sprintf('%s\nES V/S Power',expt))
+%         hold off
+%         saveas(fig,sprintf('%s%s_TpowES_%d.png',out_path,expt_name,ss))
         
-        
-        [~, i] = sort(cdata(:,3));
-        es_fn = cdata(i, :);
-        x   = log10(es_fn(:,3));
-        y   = es_fn(:,4);
-        yy = smooth(x,smooth(x,y,'moving'));
-        
-%         figure()
-        fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
-        plot(x,yy,'r--','LineWidth',3)
-        grid on
-        grid minor
-        ylim([-1,101])
-        xlabel('Log10(| 1- Effect Size |)')
-        ylabel('False Negative Rate')
-        hold on
-        scatter(x, y,'MarkerEdgeColor',[0 .5 .5],...
-                  'MarkerFaceColor',[0 .7 .7],...
-                  'LineWidth',2);
-        legend('fitted curve','real data')
-        hold on
-        title(sprintf('ES V/S FN\n%s',expt))
-        hold off
-        saveas(fig,sprintf('%s%s_TFNES_%d.png',out_path,expt_name,ss))
+%         
+%         [~, i] = sort(cdata(:,3));
+%         es_fn = cdata(i, :);
+%         x   = log10(es_fn(:,3));
+%         y   = es_fn(:,4);
+%         yy = smooth(x,smooth(x,y,'moving'));
+%         
+% %         figure()
+%         fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
+%         plot(x,yy,'r--','LineWidth',3)
+%         grid on
+%         grid minor
+%         ylim([-1,101])
+%         xlabel('Log10(| 1- Effect Size |)')
+%         ylabel('False Negative Rate')
+%         hold on
+%         scatter(x, y,'MarkerEdgeColor',[0 .5 .5],...
+%                   'MarkerFaceColor',[0 .7 .7],...
+%                   'LineWidth',2);
+%         legend('fitted curve','real data')
+%         hold on
+%         title(sprintf('ES V/S FN\n%s',expt))
+%         hold off
+%         saveas(fig,sprintf('%s%s_TFNES_%d.png',out_path,expt_name,ss))
+% 
+%         save(sprintf('%s_%d_ES_POW.mat',expt_name,cont_hrs),es_pow);
 
         fprintf("TechRep Based Power V/S Effect Size Analysis For %s Complete!\n",expt_name);
         send_message(4124992194,'fi','techPowA Complete',...
