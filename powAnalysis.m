@@ -11,14 +11,14 @@
 
         cd /home/sbp29/MATLAB
 
-        addpath('/home/sbp29/MATLAB/Matlab-Colony-Analyzer-Toolkit')
-        addpath('/home/sbp29/MATLAB/bean-matlab-toolkit')
-        addpath('/home/sbp29/MATLAB/sau-matlab-toolkit')
-        addpath('/home/sbp29/MATLAB/sau-matlab-toolkit/grid-manipulation')
-        addpath('/home/sbp29/MATLAB/paris')
-        addpath('/home/sbp29/MATLAB/development')
+        addpath(genpath('/home/sbp29/MATLAB/Matlab-Colony-Analyzer-Toolkit'))
+        addpath(genpath('/home/sbp29/MATLAB/bean-matlab-toolkit'))
+        addpath(genpath('/home/sbp29/MATLAB/sau-matlab-toolkit'))
+        addpath(genpath('/home/sbp29/MATLAB/sau-matlab-toolkit/grid-manipulation'))
+        addpath(genpath('/home/sbp29/MATLAB/paris'))
+        addpath(genpath('/home/sbp29/MATLAB/development'))
 
-        javaaddpath('/home/sbp29/MATLAB/mysql-connector-java-8.0.12.jar');
+        javaaddpath('/home/sbp29/MATLAB/mysql-connector-java-8.0.16.jar');
 
     %%  Initialization
 
@@ -26,10 +26,12 @@
         setdbprefs('DataReturnFormat', 'structure');
         setdbprefs({'NullStringRead';'NullStringWrite';'NullNumberRead';'NullNumberWrite'},...
                       {'null';'null';'NaN';'NaN'})
+        setdbprefs('NullNumberWrite','999999')
 
-        expt_name = '4C3_GA1';
-        expt = 'FS1-1';
+        expt_name = '4C3_GA1_TRBLBR';
+        expt = 'FS1-1-TRBLBR';
         out_path = '/home/sbp29/MATLAB/4C3_Data/GA/S1Analysis/power/';
+%         out_path = '/Users/saur1n/Desktop/4C3/Analysis/GA/S1Analysis/fnfp/';
         density = 6144;
 
     %   MySQL Table Details  
@@ -37,7 +39,7 @@
         tablename_norm      = sprintf('%s_%d_NORM',expt_name,density);
         tablename_fit       = sprintf('%s_%d_FITNESS',expt_name,density);
 
-        tablename_p2o       = '4C3_pos2orf_name4';
+        tablename_p2o       = '4C3_TRBLBR_pos2orf_name';
         tablename_bpos      = '4C3_borderpos';
 
     %   Reference Strain Name
@@ -70,17 +72,20 @@
                  'order by hours asc'], tablename_fit));
         hours = hours.hours;
         
+        fpr = 0.05;
         cdata = [];
 
-        for t = 2:length(hours)
+        for t = 6:length(hours)
             cont_hrs = hours(t);
-            rest_hrs = hours;%hours(hours~=cont_hrs);
+            rest_hrs = hours(6:length(hours));%hours(hours~=cont_hrs);
             fprintf("Analysis for Control Hour = %0.1f Started.\n",cont_hrs);
             
-            for ss = 8%4:8
+            for ss = 2:2:20%4:8
                 fprintf('Control Hour = %0.1f | Sample Size = %d\n',cont_hrs,ss)
 
-                fpr = fpr4c(tablename_fit, cont.name, cont_hrs, ss);
+%                 fpr = fpr4c(tablename_fit, cont.name, cont_hrs, ss);
+                p5 = pforfpr(tablename_fit, cont.name, cont_hrs, fpr, ss);
+                
                 data = [];
 
                 for ii = 1:length(rest_hrs)
@@ -154,14 +159,14 @@
                     cont_means = [];
                     for i=1:100000
                         cont_dist(i,:) = datasample(cont_fit, ss, 'Replace', false);
-                        cont_means(i,:) = mean(cont_dist(i,:));
+                        cont_means(i,:) = mean(cont_dist(i,~isoutlier(cont_dist(i,:))));
                     end
 
                     rest_dist =[];
                     rest_means = [];
                     for i=1:100000
                         rest_dist(i,:) = datasample(rest_fit, ss, 'Replace', false);
-                        rest_means(i,:) = mean(rest_dist(i,:));
+                        rest_means(i,:) = mean(rest_dist(i,~isoutlier(rest_dist(i,:))));
                     end
 
                     contmean = nanmean(cont_means);
@@ -191,12 +196,21 @@
 
                     ef_size = mean(rest_fit)/mean(cont_fit);
 
-                    all = length(rest_means);
-                    pp = sum(temp_p<0.05);
-                    pow = (pp/all)*100;
-                    avg_diff = abs(nanmean(nanmean(cont_avg)) - nanmean(nanmean(rest_avg)));
+                    pp = sum(temp_p<p5);
+                    pow = (pp/length(rest_means))*100;
+%                     avg_diff = abs(nanmean(nanmean(cont_avg)) - nanmean(nanmean(rest_avg)));
                     
-                    cdata = [cdata; ef_size, pow, avg_diff];
+                    neu = length(rest_means) - pp;
+                    del = neu + sum(temp_s(temp_p < p5) < 0);
+                    ben = del + sum(temp_s(temp_p < p5) > 0);
+                    
+                    neu_p = length(rest_means) - sum(temp_p < 0.05);
+                    del_p = neu_p + sum(temp_s(temp_p < 0.05) < 0);
+                    ben_p = del_p + sum(temp_s(temp_p < 0.05) > 0);
+                    
+                    cdata = [cdata; ss, cont_hrs, rest_hrs(ii), ef_size, pow,...
+                        neu, del, ben,...
+                        neu_p, del_p, ben_p];
 %                     data = [data; ef_size, pow, avg_diff];
 
 % %                     figure()
@@ -220,7 +234,8 @@
 %                     saveas(fig,sprintf('vp_powes_%d_%d.png',cont_hrs,rest_hrs(ii)))
 %                     saveas(fig,sprintf('%s%s_ContRest_%d%d_%d.png',...
 %                         out_path,expt_name,cont_hrs,rest_hrs(ii),ss))
-%                 fprintf('%0.1f hrs V/S %0.1f hrs done!\n', cont_hrs,rest_hrs(ii))
+                    fprintf('%0.1f hrs V/S %0.1f hrs and %d replicates done!\n',...
+                        cont_hrs,rest_hrs(ii),ss)
                 end
 
             %%  POWER vs ES
@@ -252,6 +267,10 @@
 %                 hold off
 %                 saveas(fig,sprintf('%s%s_powES_%d_%d.png',...
 %                     out_path,expt_name,cont_hrs,ss))
+
+                fprintf('powAnalysis for %s at cont_hrs %0.1f and %d replicates is done.\n',...
+                    expt_name,cont_hrs,ss)
+            
             end
                     
             fprintf('powAnalysis for %s at %d hrs is done.\n',...
@@ -287,6 +306,8 @@
 %         title(sprintf('%s\nES V/S Power',expt))
 %         hold off
 %         saveas(fig,sprintf('%s%s_powES_%d.png',out_path,expt_name,ss))
+
+        csvwrite(sprintf('%s_POWANA.csv',expt_name),cdata)
 
         fprintf("Power V/S Effect Size Analysis For %s Complete!\n",expt_name);
         send_message(4124992194,'fi','powAnalysis Complete',...
