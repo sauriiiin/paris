@@ -77,6 +77,7 @@
         hours = hours.hours;
         
         cdata = [];
+        contfitall = [];
 
         for t = 1:length(hours)
 %%  GENERATE FITNESS DATA
@@ -167,6 +168,11 @@
             datainsert(conn, temp_norm,...
                     {'pos','hours','bg','average','fitness'},fdata);
                 
+%             exec(conn, sprintf(['update %s ',...
+%                 'set fitness = NULL ',...
+%                 'where pos in ',...
+%                 '(select pos from %s)'],temp_norm, tablename_bpos));
+                
             exec(conn, sprintf('drop table %s',temp_fit)); 
             exec(conn, sprintf(['create table %s ',...
                 '(select b.orf_name, a.pos, a.hours, a.bg, a.average, a.fitness ',...
@@ -216,21 +222,40 @@
                     tablename_p2o,cont.name,tablename_bpos));
                 contpos = contpos.pos + [110000,120000,130000,140000,...
                     210000,220000,230000,240000];
-                contfit = [];
-                for ii = 1:length(contpos)
-                    temp = fetch(conn, sprintf(['select fitness from %s ',...
-                        'where hours = %d and pos in (%s)'],temp_fit,cont_hrs,...
-                        sprintf('%d,%d,%d,%d,%d,%d,%d,%d',contpos(ii,:))));
-                    if nansum(temp.fitness) > 0
-                        outlier = isoutlier(temp.fitness);
-                        temp.fitness(outlier) = NaN;
-                        contfit = [contfit, nanmean(temp.fitness(c))];
-                    end
-                end
-                contmean = nanmean(contfit);
-                contstd = nanstd(contfit);
+%                 contfit = [];
+%                 for ii = 1:length(contpos)
+%                     temp = fetch(conn, sprintf(['select fitness from %s ',...
+%                         'where hours = %d and pos in (%s)'],temp_fit,cont_hrs,...
+%                         sprintf('%d,%d,%d,%d,%d,%d,%d,%d',contpos(ii,:))));
+%                     if nansum(temp.fitness) > 0
+%                         outlier = isoutlier(temp.fitness);
+%                         temp.fitness(outlier) = NaN;
+%                         contfit = [contfit, nanmean(temp.fitness(c))];
+%                     end
+%                 end
+%                 contmean = nanmean(contfit);
+%                 contstd = nanstd(contfit);
 
                 for iii = 1:length(rest_hrs)
+                    contfit = [];
+                    for ii = 1:length(contpos)
+                        temp = fetch(conn, sprintf(['select fitness from %s ',...
+                            'where hours = %d and pos in (%s)'],temp_fit,rest_hrs(iii),...
+                            sprintf('%d,%d,%d,%d,%d,%d,%d,%d',contpos(ii,:))));
+                        if nansum(temp.fitness) > 0
+                            outlier = isoutlier(temp.fitness);
+                            temp.fitness(outlier) = NaN;
+                            contfit = [contfit, nanmean(temp.fitness(c))];
+                        end
+                    end
+                    
+                    contfitall = [contfitall, [ones(1,length(contfit))*cont_hrs;...
+                        ones(1,length(contfit))*rest_hrs(iii);...
+                        contfit]];
+                    
+                    contmean = nanmean(contfit);
+                    contstd = nanstd(contfit);
+                    
                     orffit = fetch(conn, sprintf(['select orf_name, cs_median, ',...
                         'cs_mean, cs_std from %s ',...
                         'where hours = %d and orf_name != ''%s'' ',...
@@ -304,7 +329,7 @@
 %                             expt_name,rep,string(c),cont_hrs))
 
             end
-    
+            
             fprintf('techPowA for %s at %d hrs is done.\n',...
                 expt_name,cont_hrs)
             send_message(4124992194,'fi','techPowA Update',...
@@ -312,6 +337,11 @@
                     expt_name,cont_hrs))
 
         end
+        
+        writematrix(contfitall',...
+            sprintf('%s_CONTFITALL_%d.csv',expt_name,rep),...
+            'Delimiter',',',...
+            'QuoteStrings',true)
         
         fprintf("TechRep Based Power V/S Effect Size Analysis For %s Complete!\n",expt_name);    
         send_message(4124992194,'fi','techPowA Complete',...

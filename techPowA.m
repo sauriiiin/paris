@@ -29,19 +29,19 @@
                       {'null';'null';'NaN';'NaN'})
         setdbprefs('NullNumberWrite','999999')
 
-        expt_name = '4C3_GA1_MC_BOR';
-        expt = 'FS1-1-MC-BOR';
-        out_path = '/home/sbp29/MATLAB/4C3_Data/GA/S1Analysis/power/';
+        expt_name = '4C3_96R';
+        expt      = 'FS1-96R';
+        out_path  = '/home/sbp29/MATLAB/4C3_Data/GA/S1Analysis/power/';
 %         out_path = '/Users/saur1n/Desktop/4C3/Analysis/GA/S1Analysis/fnfp/';
-        density = 6144;
+        density   = 6144;
 
     %   MySQL Table Details  
-        tablename_norm      = sprintf('%s_%d_NORM',expt_name,density);
-        tablename_fit       = sprintf('%s_%d_FITNESS',expt_name,density);
-        tablename_pval       = sprintf('%s_%d_PVALUE',expt_name,density);
+        tablename_norm = sprintf('%s_%d_NORM',expt_name,density);
+        tablename_fit  = sprintf('%s_%d_FITNESS',expt_name,density);
+        tablename_pval = sprintf('%s_%d_PVALUE',expt_name,density);
 
-        tablename_p2o       = '4C3_pos2orf_name1';
-        tablename_bpos      = '4C3_borderpos';
+        tablename_p2o  = '4C3_96R_pos2orf_name';
+        tablename_bpos = '4C3_borderpos';
 
         temp_norm      = sprintf('%s_TEMP_%d_NORM',expt_name,density);
         temp_fit       = sprintf('%s_TEMP_%d_FITNESS',expt_name,density);
@@ -49,15 +49,15 @@
         temp_pval      = sprintf('%s_TEMP_%d_PVALUE',expt_name,density);
         
     %   Reference Strain Name
-        cont.name           = 'BF_control';
+        cont.name = 'BF_control';
 
     %   MySQL Connection and fetch initial data
         connectSQL;
 
-        p2c_info(1,:) = '4C3_pos2coor6144';
-        p2c_info(2,:) = '6144plate       ';
-        p2c_info(3,:) = '6144col         ';
-        p2c_info(4,:) = '6144row         ';
+        p2c_info(1,:) = '4C3_96R_pos2coor6144';
+        p2c_info(2,:) = '6144plate           ';
+        p2c_info(3,:) = '6144col             ';
+        p2c_info(4,:) = '6144row             ';
 
         p2c = fetch(conn, sprintf(['select * from %s a ',...
             'order by a.%s, a.%s, a.%s'],...
@@ -77,6 +77,7 @@
         hours = hours.hours;
         
         cdata = [];
+        contfitall = [];
 
         for t = 1:length(hours)
 %%  GENERATE FITNESS DATA
@@ -232,6 +233,11 @@
                         contfit = [contfit, nanmean(temp.fitness(c))];
                     end
                 end
+                
+                contfitall = [contfitall, [ones(1,length(contfit))*cont_hrs;...
+                        ones(1,length(contfit))*rest_hrs(iii);...
+                        contfit]];
+                    
                 contmean = nanmean(contfit);
                 contstd = nanstd(contfit);
 
@@ -470,6 +476,11 @@
                     expt_name,cont_hrs))
 
         end
+        
+        writematrix(contfitall',...
+            sprintf('%s_CONTFITALL_%d.csv',expt_name,rep),...
+            'Delimiter',',',...
+            'QuoteStrings',true)
         
         fprintf("TechRep Based Power V/S Effect Size Analysis For %s Complete!\n",expt_name);    
         send_message(4124992194,'fi','techPowA Complete',...
