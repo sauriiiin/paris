@@ -10,16 +10,7 @@
     %%  Load Paths to Files and Data
     try
 
-        cd /home/sbp29/MATLAB
-
-        addpath(genpath('/home/sbp29/MATLAB/Matlab-Colony-Analyzer-Toolkit'))
-        addpath(genpath('/home/sbp29/MATLAB/bean-matlab-toolkit'))
-        addpath(genpath('/home/sbp29/MATLAB/sau-matlab-toolkit'))
-        addpath(genpath('/home/sbp29/MATLAB/sau-matlab-toolkit/grid-manipulation'))
-        addpath(genpath('/home/sbp29/MATLAB/paris'))
-        addpath(genpath('/home/sbp29/MATLAB/development'))
-
-        javaaddpath('/home/sbp29/MATLAB/mysql-connector-java-8.0.16.jar');
+        load_toolkit;
 
     %%  Initialization
 
@@ -27,10 +18,9 @@
         setdbprefs('DataReturnFormat', 'structure');
         setdbprefs({'NullStringRead';'NullStringWrite';'NullNumberRead';'NullNumberWrite'},...
                       {'null';'null';'NaN';'NaN'})
-        setdbprefs('NullNumberWrite','999999')
 
-        expt_name = '4C3_96R';
-        expt      = 'FS1-96R';
+        expt_name = '4C3_GA3_CC2';
+        expt      = 'FS1-GA3-CC2';
         out_path  = '/home/sbp29/MATLAB/4C3_Data/GA/S1Analysis/power/';
 %         out_path = '/Users/saur1n/Desktop/4C3/Analysis/GA/S1Analysis/fnfp/';
         density   = 6144;
@@ -39,8 +29,9 @@
         tablename_norm = sprintf('%s_%d_NORM',expt_name,density);
         tablename_fit  = sprintf('%s_%d_FITNESS',expt_name,density);
         tablename_pval = sprintf('%s_%d_PVALUE',expt_name,density);
+        tablename_mdfr = sprintf('%s_%d_MDFR',expt_name,density);
 
-        tablename_p2o  = '4C3_96R_pos2orf_name';
+        tablename_p2o  = '4C3_pos2orf_name3';
         tablename_bpos = '4C3_borderpos';
 
         temp_norm      = sprintf('%s_TEMP_%d_NORM',expt_name,density);
@@ -54,10 +45,10 @@
     %   MySQL Connection and fetch initial data
         connectSQL;
 
-        p2c_info(1,:) = '4C3_96R_pos2coor6144';
-        p2c_info(2,:) = '6144plate           ';
-        p2c_info(3,:) = '6144col             ';
-        p2c_info(4,:) = '6144row             ';
+        p2c_info(1,:) = '4C3_pos2coor6144';
+        p2c_info(2,:) = '6144plate       ';
+        p2c_info(3,:) = '6144col         ';
+        p2c_info(4,:) = '6144row         ';
 
         p2c = fetch(conn, sprintf(['select * from %s a ',...
             'order by a.%s, a.%s, a.%s'],...
@@ -132,6 +123,15 @@
 
                     cont_pos = col2grid(ismember(pos.all.pos, pos.cont.pos));
                     rest_pos = ~cont_pos;
+                    
+%                     mdfr_dat = fetch(conn, sprintf(['select a.* ',...
+%                         'from %s a, %s b ',...
+%                         'where a.hours = %d ',...
+%                         'and a.pos = b.pos and b.%s = %d ',...
+%                         'order by b.%s, b.%s'],...
+%                         tablename_mdfr,p2c_info(1,:),cont_hrs,...
+%                         p2c_info(2,:),n_plates.x6144plate_1(iii),...
+%                         p2c_info(3,:),p2c_info(4,:)));
 
                     cont_data = fetch(conn, sprintf(['select a.* ',...
                         'from %s a, %s b ',...
