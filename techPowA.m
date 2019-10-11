@@ -19,8 +19,8 @@
         setdbprefs({'NullStringRead';'NullStringWrite';'NullNumberRead';'NullNumberWrite'},...
                       {'null';'null';'NaN';'NaN'})
 
-        expt_name = '4C3_GA3_CC2';
-        expt      = 'FS1-GA3-CC2';
+        expt_name = '4C3_GA3_CC2_TRBL';
+        expt      = 'FS1-GA3-CC2-TRBL';
         out_path  = '/home/sbp29/MATLAB/4C3_Data/GA/S1Analysis/power/';
 %         out_path = '/Users/saur1n/Desktop/4C3/Analysis/GA/S1Analysis/fnfp/';
         density   = 6144;
@@ -31,7 +31,7 @@
         tablename_pval = sprintf('%s_%d_PVALUE',expt_name,density);
         tablename_mdfr = sprintf('%s_%d_MDFR',expt_name,density);
 
-        tablename_p2o  = '4C3_pos2orf_name3';
+        tablename_p2o  = '4C3_TRBL_pos2orf_name3';
         tablename_bpos = '4C3_borderpos';
 
         temp_norm      = sprintf('%s_TEMP_%d_NORM',expt_name,density);
@@ -69,10 +69,10 @@
         
         cdata = [];
         contfitall = [];
-
+        
         for t = 1:length(hours)
 %%  GENERATE FITNESS DATA
-                
+
             cont_hrs = hours(t);
             rest_hrs = hours;%hours(hours~=cont_hrs);
 
@@ -93,7 +93,7 @@
             orfs = fetch(conn, sprintf(['select count(*) from %s ',...
                 'where hours = %d'],tablename_pval,cont_hrs));
             fpr = (fpr.count____1/orfs.count____1)*100;
-            
+
             data = [];
             fdata = [];
             for ii = 1:length(rest_hrs)
@@ -123,15 +123,6 @@
 
                     cont_pos = col2grid(ismember(pos.all.pos, pos.cont.pos));
                     rest_pos = ~cont_pos;
-                    
-%                     mdfr_dat = fetch(conn, sprintf(['select a.* ',...
-%                         'from %s a, %s b ',...
-%                         'where a.hours = %d ',...
-%                         'and a.pos = b.pos and b.%s = %d ',...
-%                         'order by b.%s, b.%s'],...
-%                         tablename_mdfr,p2c_info(1,:),cont_hrs,...
-%                         p2c_info(2,:),n_plates.x6144plate_1(iii),...
-%                         p2c_info(3,:),p2c_info(4,:)));
 
                     cont_data = fetch(conn, sprintf(['select a.* ',...
                         'from %s a, %s b ',...
@@ -158,6 +149,7 @@
                     plate_avg = cont_avg + rest_avg;
 
                     plate_fit = plate_avg./plate_bg;
+%                     plate_fit = plate_avg;
                     fdata = [fdata; pos.all.pos, ones(length(pos.all.pos),1).*rest_hrs(ii),...
                         grid2row(plate_bg)', grid2row(plate_avg)', grid2row(plate_fit)'];
                 end
@@ -165,25 +157,25 @@
             end
             datainsert(conn, temp_norm,...
                     {'pos','hours','bg','average','fitness'},fdata);
-                
+
             exec(conn, sprintf('drop table %s',temp_fit)); 
             exec(conn, sprintf(['create table %s ',...
                 '(select b.orf_name, a.pos, a.hours, a.bg, a.average, a.fitness ',...
                 'from %s a, %s b ',...
                 'where a.pos = b.pos ',...
                 'order by a.pos asc)'],temp_fit,temp_norm,tablename_p2o));
-            
+
 %%  FITNESS STATS
-            for rep = 8
+            for rep = 2:2:8
                 rep_pos = combnk(1:8,rep);
-                
+
                 if rep < 8 %8 for entire plate
                     N = datasample(1:length(rep_pos),1);
                     c = rep_pos(N,:);
                 else
                     c = rep_pos;
                 end
-                    
+
 %                     exec(conn, sprintf(['update %s ',...
 %                         'set fitness = average'], temp_fit)); %for no normalization results
 
@@ -233,11 +225,11 @@
                         contfit = [contfit, nanmean(temp.fitness(c))];
                     end
                 end
-                
+
                 contfitall = [contfitall, [ones(1,length(contfit))*cont_hrs;...
                         ones(1,length(contfit))*rest_hrs(iii);...
                         contfit]];
-                    
+
                 contmean = nanmean(contfit);
                 contstd = nanstd(contfit);
 
@@ -468,7 +460,7 @@
     %         saveas(fig,sprintf('%s%s_TFNES_%d.png',out_path,expt_name,ss))
     % 
     %         save(sprintf('%s_%d_ES_POW.mat',expt_name,cont_hrs),es_pow);
-    
+
             fprintf('techPowA for %s at %d hrs is done.\n',...
                 expt_name,cont_hrs)
             send_message(4124992194,'fi','techPowA Update',...
@@ -477,10 +469,10 @@
 
         end
         
-        writematrix(contfitall',...
-            sprintf('%s_CONTFITALL_%d.csv',expt_name,rep),...
-            'Delimiter',',',...
-            'QuoteStrings',true)
+%         writematrix(contfitall',...
+%             sprintf('%s_CONTFITALL_%d.csv',expt_name,rep),...
+%             'Delimiter',',',...
+%             'QuoteStrings',true)
         
         fprintf("TechRep Based Power V/S Effect Size Analysis For %s Complete!\n",expt_name);    
         send_message(4124992194,'fi','techPowA Complete',...
