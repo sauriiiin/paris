@@ -1,10 +1,10 @@
 %%  Sau MATLAB Colony Analyzer Toolkit
 %
-%%  TECHNICAL REPLICATES BASED POWER ANALYSIS
+%%  POWER ANALYSIS VARRYING TECH REP AND REF PROP
 %   Power Analysis of Validation Experiments (4Control)
-%   With technical replicates
+%   With change in Reference Proportion & technical replicates
 
-%   Author: Saurin Parikh, March 2019
+%   Author: Saurin Parikh, April 2020
 %   dr.saurin.parikh@gmail.com
 
     %%  Load Paths to Files and Data
@@ -14,15 +14,8 @@
 
     %%  Initialization
 
-    %     Set preferences with setdbprefs.
-%         setdbprefs('DataReturnFormat', 'structure');
-%         setdbprefs({'NullStringRead';'NullSstringWrite';'NullNumberRead';'NullNumberWrite'},...
-%                       {'null';'null';'NaN';'NaN'})
-
-        expt_name = '4C4_FS_NONORM_12';
-        expt      = '4C4 FS NONORM 12';
-        out_path  = '/home/sbp29/MATLAB/4C3_Data/GA/S1Analysis/power/';
-%         out_path = '/Users/saur1n/Desktop/4C3/Analysis/GA/S1Analysis/fnfp/';
+        expt_name = '4C4_FS_RND';
+        expt      = '4C4 FS RND';
         density   = 6144;
 
     %   MySQL Table Details  
@@ -45,10 +38,10 @@
     %   MySQL Connection and fetch initial data
         connectSQL;
 
-        p2c_info(1,:) = '4C4_12_pos2coor';
-        p2c_info(2,:) = 'plate          ';
-        p2c_info(3,:) = 'col            ';
-        p2c_info(4,:) = 'row            ';
+        p2c_info(1,:) = '4C4_pos2coor';
+        p2c_info(2,:) = 'plate       ';
+        p2c_info(3,:) = 'col         ';
+        p2c_info(4,:) = 'row         ';
 
         p2c = fetch(conn, sprintf(['select * from %s a ',...
             'where density = %d ',...
@@ -72,14 +65,13 @@
         hours = hours.hours;
         
         cdata = [];
-        contfitall = [];
         
-        for atmpt = 1
+        for atmpt = 1:5
             for t = 1:length(hours)
     %%  GENERATE FITNESS DATA
 
                 cont_hrs = hours(t);
-                rest_hrs = hours;%hours(hours~=cont_hrs);
+                rest_hrs = hours;
 
                 exec(conn, sprintf('drop table %s',temp_norm));
                 exec(conn, sprintf(['create table %s ( ',...
@@ -162,7 +154,7 @@
                         fdata = [fdata; pos.all.pos, ones(length(pos.all.pos),1).*rest_hrs(ii),...
                             grid2row(plate_bg)', grid2row(plate_avg)', grid2row(plate_fit)'];
                     end
-                    fprintf('%0.2f hrs V/S %0.2f hrs done!\n', cont_hrs,rest_hrs(ii))
+%                     fprintf('%0.2f hrs V/S %0.2f hrs done!\n', cont_hrs,rest_hrs(ii))
                 end
                 datainsert(conn, temp_norm,...
                         {'pos','hours','bg','average','fitness'},fdata);
@@ -177,7 +169,7 @@
     %%  FITNESS STATS
     
                 max_rep = 16;
-                for rep = max_rep %2:2:16
+                for rep = 2:2:16
                     rep_pos = combnk(1:max_rep,rep);
 
                     if rep < max_rep %max_rep for entire plate
@@ -239,10 +231,6 @@
                         end
                     end
 
-                    contfitall = [contfitall, [ones(1,length(contfit))*cont_hrs;...
-                            ones(1,length(contfit))*rest_hrs(iii);...
-                            contfit]];
-
                     contmean = nanmean(contfit);
                     contstd = nanstd(contfit);
 
@@ -284,99 +272,6 @@
                         toc
                     end
 
-        %%  CALCULATE POWER & ES
-
-    %                     for iii = 1:length(rest_hrs)
-    %                         rfit = fetch(conn, sprintf(['select cs_mean from %s ',...
-    %                             'where hours = %d and orf_name not in (''%s'', ''BFC100'') ',...
-    %                             'and cs_mean is not NULL'],...
-    %                             temp_fits,rest_hrs(iii),cont.name));
-    %                         restfit = rfit.cs_mean;
-    %                         ef_size = nanmean(restfit)/nanmean(contfit);
-    % 
-    %                         pp = fetch(conn, sprintf(['select p from %s ',...
-    %                             'where hours = %d '],...
-    %                             temp_pval,rest_hrs(iii)));
-    % 
-    %                         pow = (sum(pp.p<=0.05)/length(pp.p))*100;
-    %                         cdata = [cdata; ef_size, pow, abs(1-ef_size), 100-pow];
-    %                         data = [data; ef_size, pow, abs(1-ef_size), 100-pow];
-
-    %         %                 figure()
-    %                         fig = figure('Renderer', 'painters', 'Position', [10 10 480 300],'visible','off');
-    %                         [f,xi] = ksdensity(cont_fit);
-    %                         plot(xi,f,'LineWidth',3)
-    %                         xlim([0.75,1.25])
-    %         %                 ylim([0,30])
-    %                         hold on
-    %                         [f,xi] = ksdensity(rest_fit);
-    %                         plot(xi,f,'LineWidth',3)
-    %                         legend('control','rest of plate')
-    %                         title(sprintf(['%s\n',...
-    %                             'Time = (%d, %d) hrs | ES = %0.3f | Power = %0.3f'],...
-    %                             expt,cont_hrs,rest_hrs(iii),ef_size,pow))
-    %                         xlabel('Fitness')
-    %                         ylabel('Density')
-    %                         grid on
-    %                         grid minor
-    %                         hold off
-    %                         saveas(fig,sprintf('%s%s_ContRest_%d%d.png',...
-    %                             out_path,expt_name,cont_hrs,rest_hrs(iii)))
-    %                     end
-
-                %%  POWER vs ES
-
-    %                 [~, i] = sort(data(:,1));
-    %                 es_pow = data(i, :);
-    % 
-    %                 x   = es_pow(:,1);
-    %                 y   = es_pow(:,2);
-    %                 xx  = min(es_pow(:,1)):.001:max(es_pow(:,1));
-    %                 yy  = interp1(x,y,...
-    %                     xx,'makima');
-
-            %         figure()
-        %             fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
-        %             plot(xx,yy,'Color',[0.5 0.75 1],'LineWidth',1)
-        %             grid on
-        %             grid minor
-        %             xlim([0.6,1.4])
-        %             ylim([-1,101])
-        %             xlabel('Effect Size (Relative Fitness)')
-        %             ylabel('Power')
-        %             hold on
-        %             scatter(x, y,'MarkerEdgeColor',[0 .5 .5],...
-        %                       'MarkerFaceColor',[0 .7 .7],...
-        %                       'LineWidth',2);
-        %             hold on
-        %             title(sprintf('ES V/S Power\nTime = %dhrs | SS = %d | FPR = %.2f%%',cont_hrs, ss, fpr))
-        %             hold off
-        %             saveas(fig,sprintf('%s%s_TpowES_%d_%d.png',...
-        %                 out_path,expt_name,cont_hrs,ss))
-        %             
-
-        %             [~, i] = sort(data(:,3));
-        %             es_fn = data(i, :);
-        %             x   = log10(es_fn(:,3));
-        %             y   = es_fn(:,4);
-        % 
-        %     %         figure()
-        %             fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
-        %             grid on
-        %             grid minor
-        %             ylim([-1,101])
-        %             xlabel('Log10(Effect Size)')
-        %             ylabel('False Negative Rate')
-        %             hold on
-        %             scatter(x, y,'MarkerEdgeColor',[0 .5 .5],...
-        %                       'MarkerFaceColor',[0 .7 .7],...
-        %                       'LineWidth',2);
-        %             hold on
-        %             title(sprintf('ES V/S FN\nTime = %dhrs | SS = %d | FPR = %.2f%%',cont_hrs, ss, fpr))
-        %             hold off
-        %             saveas(fig,sprintf('%s%s_TFNES_%d_%d.png',...
-        %                 out_path,expt_name,cont_hrs,ss))
-
         %%  SAVING ALL DATA
 
                     temp_stat_p = fetch(conn, sprintf(['select a.*, b.p ',...
@@ -406,86 +301,19 @@
                         'Delimiter',',',...
                         'QuoteStrings',true)
 
-%                     fprintf('techPowA for %s and %d (%s) replicates at %0.2f hrs is done.\n',...
-%                         expt_name,rep,join(string(c),''),cont_hrs)
+                    fprintf('techPowA for %s and %d (%s) replicates at %0.2f hrs is done.\n',...
+                        expt_name,rep,join(string(c),''),cont_hrs)
     %                     send_message(4124992194,'fi','techPowA Update',...
     %                         sprintf('techPowA for %s and %d (%s) replicates at %d hrs is done.\n',...
     %                             expt_name,rep,string(c),cont_hrs))
 
                 end
-    %             fprintf('techPowA for %s and %d replicates at %d hrs is done.\n',...
-    %                     expt_name,rep,cont_hrs)
-    %                 send_message(4124992194,'fi','techPowA Update',...
-    %                     sprintf('techPowA for %s and %d replicates at %d hrs is done.\n',...
-    %                         expt_name,rep,cont_hrs))
-
-        %%  COMPOSITE ES AND POW RELATIONSHIP
-    % 
-    %             [~, i] = sort(cdata(:,1));
-    %             es_pow = cdata(i, :);
-    % 
-    %             x   = es_pow(:,1);
-    %             y   = es_pow(:,2);
-    %             xx  = min(es_pow(:,1)):.001:max(es_pow(:,1));
-    %             yy  = interp1(x,y,xx,'makima');
-
-        %         figure()
-        %         fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
-        %         plot(xx,yy,'Color',[0.5 0.75 1],'LineWidth',1)
-        %         grid on
-        %         grid minor
-        %         xlim([0.8,1.2])
-        %         ylim([-1,101])
-        %         xlabel('Effect Size (Relative Fitness)')
-        %         ylabel('Power')
-        %         hold on
-        %         scatter(x, y,'MarkerEdgeColor',[0 .5 .5],...
-        %                   'MarkerFaceColor',[0 .7 .7],...
-        %                   'LineWidth',2);
-        %         hold on
-        %         title(sprintf('%s\nES V/S Power',expt))
-        %         hold off
-        %         saveas(fig,sprintf('%s%s_TpowES_%d.png',out_path,expt_name,ss))
-
-        %         
-        %         [~, i] = sort(cdata(:,3));
-        %         es_fn = cdata(i, :);
-        %         x   = log10(es_fn(:,3));
-        %         y   = es_fn(:,4);
-        %         yy = smooth(x,smooth(x,y,'moving'));
-        %         
-        % %         figure()
-        %         fig = figure('Renderer', 'painters', 'Position', [10 10 960 800],'visible','off');
-        %         plot(x,yy,'r--','LineWidth',3)
-        %         grid on
-        %         grid minor
-        %         ylim([-1,101])
-        %         xlabel('Log10(| 1- Effect Size |)')
-        %         ylabel('False Negative Rate')
-        %         hold on
-        %         scatter(x, y,'MarkerEdgeColor',[0 .5 .5],...
-        %                   'MarkerFaceColor',[0 .7 .7],...
-        %                   'LineWidth',2);
-        %         legend('fitted curve','real data')
-        %         hold on
-        %         title(sprintf('ES V/S FN\n%s',expt))
-        %         hold off
-        %         saveas(fig,sprintf('%s%s_TFNES_%d.png',out_path,expt_name,ss))
-        % 
-        %         save(sprintf('%s_%d_ES_POW.mat',expt_name,cont_hrs),es_pow);
 
                 fprintf('techPowA for %s at %0.2f hrs is done.\n',...
                     expt_name,cont_hrs)
-%                 send_message(4124992194,'fi','techPowA Update',...
-%                     sprintf('techPowA for %s at %0.2f hrs is done.\n',...
-%                         expt_name,cont_hrs))
 
             end
         end
-%         writematrix(contfitall',...
-%             sprintf('%s_CONTFITALL_%d.csv',expt_name,rep),...
-%             'Delimiter',',',...
-%             'QuoteStrings',true)
         
         fprintf("TechRep Based Power V/S Effect Size Analysis For %s Complete!\n",expt_name);    
         send_message(4124992194,'fi','techPowA Complete',...
@@ -494,6 +322,6 @@
     catch me
 
         warning(me.message)
-%         send_message(4124992194,'fi','techPowA Error',me.message)
+        send_message(4124992194,'fi','techPowA Error',me.message)
 
     end   

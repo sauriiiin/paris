@@ -1,10 +1,10 @@
 %%  Sau MATLAB Colony Analyzer Toolkit
 %
-%%  TECHNICAL REPLICATES BASED POWER ANALYSIS
+%%  POWER ANALYSIS VARRYING TECH REP AND REF PROP
 %   Power Analysis of Validation Experiments (4Control)
-%   With technical replicates
+%   With change in Reference Proportion & technical replicates
 
-%   Author: Saurin Parikh, March 2019
+%   Author: Saurin Parikh, April 2020
 %   dr.saurin.parikh@gmail.com
 
     %%  Load Paths to Files and Data
@@ -17,12 +17,10 @@
     %     Set preferences with setdbprefs.
 %         setdbprefs('DataReturnFormat', 'structure');
 %         setdbprefs({'NullStringRead';'NullSstringWrite';'NullNumberRead';'NullNumberWrite'},...
-%                       {'null';'null';'NaN';'NaN'})
+%                       {'null';'nsull';'NaN';'NaN'})
 
         expt_name = '4C4_FS_NONORM_12';
         expt      = '4C4 FS NONORM 12';
-        out_path  = '/home/sbp29/MATLAB/4C3_Data/GA/S1Analysis/power/';
-%         out_path = '/Users/saur1n/Desktop/4C3/Analysis/GA/S1Analysis/fnfp/';
         density   = 6144;
 
     %   MySQL Table Details  
